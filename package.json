@@ -43,7 +43,8 @@
     "publish": {
       "provider": "github",
       "owner": "ryan5677",
-      "repo": "nyx-client"
+      "repo": "nyx-client",
+      "releaseType": "release"
     },
     "win": {
       "target": [
