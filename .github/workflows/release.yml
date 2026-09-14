@@ -1,0 +1,43 @@
+name: Release
+
+# Push a tag like "v0.3.1" (matching the version in package.json) and this
+# builds both installers on a real Windows runner and publishes them - plus
+# their latest.yml / dev.yml update-feed files - straight to a GitHub
+# Release. That's the entire release process: bump the version, tag it,
+# push. No local build, no manual file uploads, no personal access token to
+# manage - GITHUB_TOKEN below is provided automatically by GitHub Actions
+# for every run, scoped to just this repo.
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and publish Public variant
+        run: npm run build:public
+        env:
+          PUBLISH: always
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish Dev variant
+        run: npm run build:dev
+        env:
+          PUBLISH: always
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

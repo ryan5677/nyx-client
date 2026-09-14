@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com data: https:; img-src 'self' data: https:; script-src 'self' 'unsafe-inline';" />
+<title>Nyx Client</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Startup animation: meteor streaks in and strikes the moon, then the UI
+       slides in behind it. Controlled by settings.startupAnimation
+       (Full/Quick/Off, set in Customisation). Sits above everything else
+       until it fades itself out and detaches. -->
+  <div class="intro-overlay" id="intro-overlay" aria-hidden="true">
+    <div class="intro-sky"></div>
+    <div class="intro-stars" id="intro-stars"></div>
+    <div class="intro-stage" id="intro-stage">
+      <img class="intro-moon" id="intro-moon" src="assets/nyx-glyph.png" alt="" />
+      <div class="intro-meteor" id="intro-meteor"></div>
+      <div class="intro-flash" id="intro-flash"></div>
+      <div class="intro-shockwave" id="intro-shockwave"></div>
+      <div class="intro-shockwave intro-shockwave-2" id="intro-shockwave-2"></div>
+      <div class="intro-particles" id="intro-particles"><!-- injected debris chips --></div>
+      <div class="intro-wordmark" id="intro-wordmark">
+        <span class="intro-wordmark-name">NYX</span>
+        <span class="intro-wordmark-sub">client</span>
+      </div>
+    </div>
+    <button class="intro-skip" id="intro-skip" type="button">Skip</button>
+    <div class="intro-screen-flash" id="intro-screen-flash"></div>
+  </div>
+
+  <div class="app" id="app">
+    <!-- Night sky background layer (toggled via Customisation) - sits behind both sidebar and content -->
+    <div class="night-sky" id="night-sky" aria-hidden="true"></div>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="brand">
+        <img class="brand-mark" src="assets/nyx-glyph.png" alt="" aria-hidden="true" />
+        <div class="brand-text">
+          <span class="brand-name">NYX</span>
+          <span class="brand-sub">client</span>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <button class="nav-item active" data-view="play">
+          <span class="nav-icon">&#9654;</span> Play
+        </button>
+        <button class="nav-item" data-view="mods">
+          <span class="nav-icon">&#9633;</span> Mods
+        </button>
+        <button class="nav-item" data-view="browse">
+          <span class="nav-icon">&#8981;</span> Browse Mods
+        </button>
+        <button class="nav-item" data-view="performance">
+          <span class="nav-icon">&#9889;</span> Performance
+        </button>
+        <button class="nav-item" data-view="accounts">
+          <span class="nav-icon">&#9679;</span> Accounts
+        </button>
+        <button class="nav-item" data-view="skin-editor">
+          <span class="nav-icon">&#9784;</span> Skin Editor
+        </button>
+        <button class="nav-item" data-view="settings">
+          <span class="nav-icon">&#9881;</span> Settings
+        </button>
+        <button class="nav-item" data-view="customisation">
+          <span class="nav-icon">&#9682;</span> Customisation
+        </button>
+        <button class="nav-item" data-view="premium">
+          <span class="nav-icon">&#9733;</span> Premium
+        </button>
+        <!-- ADMIN:START -->
+        <button class="nav-item" data-view="admin" id="nav-admin" hidden>
+          <span class="nav-icon">&#9670;</span> Admin
+        </button>
+        <!-- ADMIN:END -->
+      </div>
+
+      <div class="sidebar-footer">
+        <div id="account-chip" class="account-chip">
+          <div class="account-avatar" id="account-avatar"></div>
+          <div class="account-meta">
+            <span id="account-name">Not signed in</span>
+            <span class="account-hint">Account</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="content">
+
+      <!-- PLAY VIEW -->
+      <section class="view active" id="view-play">
+        <div class="play-layout">
+          <aside class="instance-rail">
+            <div class="rail-head">
+              <h2>Instances</h2>
+              <button class="btn-icon" id="btn-new-instance" title="New instance">+</button>
+            </div>
+            <div class="instance-list" id="instance-list"><!-- injected --></div>
+          </aside>
+
+          <div class="play-main">
+            <div class="play-header">
+              <div>
+                <div class="eyebrow" id="play-loader-tag">FABRIC</div>
+                <h1 id="play-instance-name">Default</h1>
+                <p class="muted" id="play-instance-sub">Minecraft —</p>
+              </div>
+              <div class="play-actions">
+                <select id="play-version-select" class="select select-compact" title="Minecraft version"></select>
+                <select id="play-loader-select" class="select select-compact" title="Mod loader">
+                  <option value="vanilla">Vanilla</option>
+                  <option value="fabric">Fabric</option>
+                  <option value="forge">Forge</option>
+                  <option value="quilt">Quilt</option>
+                </select>
+                <select id="play-loader-version-select" class="select select-compact" title="Loader version"></select>
+              </div>
+            </div>
+
+            <button class="play-button" id="btn-play">
+              <svg class="play-button-sword" id="play-button-sword" viewBox="0 0 24 24" aria-hidden="true">
+                <g transform="rotate(45 12 12)">
+                  <rect x="11" y="1" width="2" height="11" />
+                  <rect x="7.5" y="12" width="9" height="2" />
+                  <rect x="10.5" y="14" width="3" height="6" rx="0.6" />
+                  <rect x="9.5" y="20" width="5" height="2" rx="0.6" />
+                </g>
+              </svg>
+              <span id="play-button-label">PLAY</span>
+            </button>
+
+            <div class="progress-block" id="progress-block" hidden>
+              <div class="progress-row">
+                <span id="progress-label">Preparing…</span>
+                <span id="progress-pct">0%</span>
+              </div>
+              <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+            </div>
+
+            <div class="console-wrap">
+              <div class="console-head">
+                <span>Launch log</span>
+                <button class="btn-text" id="btn-clear-log">Clear</button>
+              </div>
+              <pre class="console" id="launch-console"></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODS VIEW -->
+      <section class="view" id="view-mods">
+        <div class="view-header">
+          <div>
+            <h1>Mods</h1>
+            <p class="muted">Managing <strong id="mods-instance-name">—</strong></p>
+          </div>
+          <div class="view-header-actions">
+            <select id="mods-instance-select" class="select"></select>
+            <button class="btn" id="btn-open-mods-folder">Open Folder</button>
+            <button class="btn btn-accent" id="btn-goto-browse">Browse Mods</button>
+          </div>
+        </div>
+
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-inner">
+            <div class="dropzone-icon">&#8681;</div>
+            <p><strong>Drag &amp; drop</strong> .jar mod files here</p>
+            <p class="muted small">or click to choose files</p>
+            <input type="file" id="dropzone-input" accept=".jar" multiple hidden />
+          </div>
+        </div>
+
+        <div class="mod-list" id="installed-mod-list"><!-- injected --></div>
+      </section>
+
+      <!-- BROWSE VIEW -->
+      <section class="view" id="view-browse">
+        <div class="view-header">
+          <div>
+            <h1>Browse Mods</h1>
+            <p class="muted">Installing into <strong id="browse-instance-name">—</strong></p>
+          </div>
+        </div>
+
+        <div class="browse-toolbar">
+          <input type="text" id="browse-query" class="input" placeholder="Search mods…" />
+          <div class="segmented" id="browse-source">
+            <button class="segmented-btn active" data-source="modrinth">Modrinth</button>
+            <button class="segmented-btn" data-source="curseforge">CurseForge</button>
+            <button class="segmented-btn" data-source="modpacks">Modpacks</button>
+          </div>
+          <button class="btn" id="btn-browse-search">Search</button>
+        </div>
+        <p class="hint" id="curseforge-hint" hidden>
+          CurseForge needs your own free API key — add one in
+          <button class="btn-link" data-view="settings">Settings</button>.
+        </p>
+        <p class="hint" id="modpacks-hint" hidden>
+          Installing a modpack creates a brand-new instance for it (version and loader come from the pack itself).
+        </p>
+
+        <div class="mod-grid" id="browse-results"><!-- injected --></div>
+        <p class="muted small browse-loading-more" id="browse-loading-more" hidden>Loading more…</p>
+      </section>
+
+
+      <!-- PERFORMANCE VIEW -->
+      <section class="view" id="view-performance">
+        <div class="view-header">
+          <div>
+            <h1>Performance</h1>
+            <p class="muted">Installing into <strong id="perf-instance-name">—</strong></p>
+          </div>
+          <div class="view-header-actions">
+            <button class="btn" id="btn-rescan-specs">Rescan</button>
+          </div>
+        </div>
+
+        <div class="panel" id="specs-panel">
+          <h3>Your system</h3>
+          <div class="specs-grid" id="specs-grid">
+            <p class="muted small">Scanning…</p>
+          </div>
+        </div>
+
+        <div id="perf-recommendations"><!-- injected: one section per reason group --></div>
+      </section>
+
+      <!-- ACCOUNTS VIEW -->
+      <section class="view" id="view-accounts">
+        <div class="view-header">
+          <div><h1>Accounts</h1></div>
+          <div class="view-header-actions">
+            <button class="btn btn-accent" id="btn-add-account">Add account</button>
+          </div>
+        </div>
+
+        <div class="panel account-panel">
+          <div class="account-avatar large" id="account-avatar-large"></div>
+          <div class="account-panel-body">
+            <h2 id="account-panel-name">Not signed in</h2>
+            <p class="muted" id="account-panel-sub">Add the Microsoft account that owns Minecraft.</p>
+          </div>
+        </div>
+
+        <div class="mod-list" id="account-list"><!-- injected --></div>
+      </section>
+
+      <!-- SKIN EDITOR VIEW -->
+      <section class="view" id="view-skin-editor">
+        <div class="view-header">
+          <div>
+            <h1>Skin Editor</h1>
+            <p class="muted">Paint a skin pixel-by-pixel and preview it in 3D before uploading.</p>
+          </div>
+          <div class="view-header-actions">
+            <button class="btn" id="btn-skin-new">New blank</button>
+            <button class="btn" id="btn-skin-load-current">Load my skin</button>
+            <button class="btn" id="btn-skin-import">Import PNG…</button>
+            <button class="btn" id="btn-skin-export">Export PNG…</button>
+            <button class="btn btn-accent" id="btn-skin-upload">Upload to account</button>
+          </div>
+        </div>
+
+        <div class="skin-editor-layout">
+          <div class="panel skin-editor-tools">
+            <h3>Tools</h3>
+            <div class="skin-tool-row" id="skin-tool-row">
+              <button class="skin-tool-btn active" data-tool="pencil" title="Pencil">&#9998;</button>
+              <button class="skin-tool-btn" data-tool="eraser" title="Eraser">&#11036;</button>
+              <button class="skin-tool-btn" data-tool="fill" title="Fill bucket">&#9911;</button>
+              <button class="skin-tool-btn" data-tool="eyedropper" title="Eyedropper">&#9679;</button>
+            </div>
+
+            <div class="field-row" style="margin-top: 16px;">
+              <label>Brush size</label>
+              <div class="segmented" id="skin-brush-segmented">
+                <button class="segmented-btn active" data-brush="1">1px</button>
+                <button class="segmented-btn" data-brush="2">2px</button>
+                <button class="segmented-btn" data-brush="3">3px</button>
+              </div>
+            </div>
+
+            <div class="field-row" style="margin-top: 16px;">
+              <label>Color</label>
+              <div class="swatch-row" id="skin-color-swatches">
+                <button class="swatch" data-color="#3b2415" style="background:#3b2415" title="Dark brown"></button>
+                <button class="swatch" data-color="#7a4a2a" style="background:#7a4a2a" title="Brown"></button>
+                <button class="swatch" data-color="#d9a066" style="background:#d9a066" title="Skin tone"></button>
+                <button class="swatch" data-color="#f2d3b3" style="background:#f2d3b3" title="Light skin tone"></button>
+                <button class="swatch" data-color="#ffffff" style="background:#ffffff" title="White"></button>
+                <button class="swatch" data-color="#1a1a1a" style="background:#1a1a1a" title="Black"></button>
+                <button class="swatch" data-color="#4a7ccf" style="background:#4a7ccf" title="Blue"></button>
+                <button class="swatch" data-color="#d64545" style="background:#d64545" title="Red"></button>
+                <button class="swatch" data-color="#6f9d5a" style="background:#6f9d5a" title="Green"></button>
+                <button class="swatch" data-color="#d6a72e" style="background:#d6a72e" title="Gold"></button>
+                <input type="color" class="swatch-custom" id="skin-color-custom" title="Custom color" value="#8b5cf6" />
+              </div>
+              <div class="field-row inline" style="margin-top: 10px;">
+                <input type="text" id="skin-color-hex" class="input input-small" maxlength="7" placeholder="#8b5cf6" />
+              </div>
+            </div>
+
+            <div class="field-row" style="margin-top: 16px;">
+              <label class="range-row-head" style="margin-bottom: 6px;">Model</label>
+              <div class="segmented" id="skin-model-segmented">
+                <button class="segmented-btn active" data-model="classic">Classic</button>
+                <button class="segmented-btn" data-model="slim">Slim</button>
+              </div>
+            </div>
+
+            <div class="field-row inline" style="margin-top: 16px;">
+              <div class="toggle" id="skin-grid-toggle"></div>
+              <label>Show part guides</label>
+            </div>
+
+            <div class="field-row inline">
+              <div class="toggle" id="skin-overlay-toggle"></div>
+              <label>Show hat/jacket overlay in 3D</label>
+            </div>
+
+            <div class="range-row" style="margin-top: 16px;">
+              <div class="range-row-head">
+                <label>Zoom</label>
+                <span class="range-row-value" id="skin-zoom-value">8x</span>
+              </div>
+              <input type="range" class="range-input" id="skin-zoom" min="4" max="16" step="1" value="8" />
+            </div>
+
+            <div class="field-row inline" style="margin-top: 16px; gap: 8px;">
+              <button class="btn btn-small" id="btn-skin-undo">Undo</button>
+              <button class="btn btn-small" id="btn-skin-redo">Redo</button>
+            </div>
+          </div>
+
+          <div class="panel skin-editor-canvas-wrap">
+            <h3>Texture</h3>
+            <div class="skin-canvas-scroll" id="skin-canvas-scroll">
+              <div class="skin-canvas-frame" id="skin-canvas-frame">
+                <canvas id="skin-edit-canvas" width="64" height="64"></canvas>
+                <canvas id="skin-grid-canvas" width="64" height="64"></canvas>
+              </div>
+            </div>
+            <p class="muted small" id="skin-cursor-pos">Pixel: —</p>
+          </div>
+
+          <div class="panel skin-editor-preview">
+            <div class="field-row inline" style="justify-content: space-between;">
+              <h3 style="margin: 0;">3D Preview</h3>
+              <label class="checkbox">
+                <input type="checkbox" id="skin-3d-paint-toggle" />
+                Paint on model
+              </label>
+            </div>
+            <div class="skin-3d-frame" id="skin-3d-frame">
+              <canvas id="skin-3d-canvas"></canvas>
+              <span class="skin-3d-hint" id="skin-3d-hint">Drag to rotate &middot; scroll to zoom</span>
+            </div>
+            <p class="muted small">Paint on model: left-click paints, right-drag rotates. Off: drag rotates as usual.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS VIEW -->
+      <section class="view" id="view-settings">
+        <div class="view-header"><h1>Settings</h1></div>
+
+        <div class="panel">
+          <h3>Memory</h3>
+          <div class="field-row">
+            <label>Minimum <span id="mem-min-label">2 GB</span></label>
+            <input type="range" min="1" max="16" step="1" id="mem-min" />
+          </div>
+          <div class="field-row">
+            <label>Maximum <span id="mem-max-label">4 GB</span></label>
+            <input type="range" min="1" max="32" step="1" id="mem-max" />
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Window</h3>
+          <div class="field-row inline">
+            <label>Width</label>
+            <input type="number" id="win-width" class="input input-small" />
+            <label>Height</label>
+            <input type="number" id="win-height" class="input input-small" />
+          </div>
+          <div class="field-row inline">
+            <label class="checkbox"><input type="checkbox" id="win-fullscreen" /> Start fullscreen</label>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Java</h3>
+          <div class="field-row inline">
+            <input type="text" id="java-path" class="input" placeholder="Auto-detect (recommended)" readonly />
+            <button class="btn" id="btn-choose-java">Choose folder…</button>
+          </div>
+          <p class="muted small">Leave on auto-detect unless you need a specific Java install. If set, point this at the folder containing <code>bin/java</code>.</p>
+        </div>
+
+        <div class="panel">
+          <h3>Mod sources</h3>
+          <div class="field-row">
+            <label>CurseForge API key</label>
+            <input type="password" id="curseforge-key" class="input" placeholder="Paste your key from console.curseforge.com" />
+          </div>
+          <p class="muted small">Modrinth needs no key. CurseForge requires your own free key — see the README.</p>
+          <p class="muted small">Some CurseForge mod authors have disabled third-party downloads for their files - if you hit that, the error message will say so and you'll need to grab the .jar manually from the mod's CurseForge page.</p>
+        </div>
+
+        <div class="panel">
+          <h3>General</h3>
+          <div class="field-row inline">
+            <label class="checkbox"><input type="checkbox" id="show-snapshots" /> Show snapshot versions</label>
+          </div>
+          <div class="field-row inline">
+            <label class="checkbox"><input type="checkbox" id="close-on-launch" /> Hide launcher while playing</label>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Account sync</h3>
+          <p class="muted small">Optional - only used if someone (usually whoever runs the dev build) has set up cross-device Premium syncing. Leave blank and nothing here ever gets contacted.</p>
+          <div class="field-row" style="margin-top: 8px;">
+            <label>Backend URL</label>
+            <input type="text" id="backend-url-input" class="input" placeholder="https://your-server.example.com" />
+          </div>
+          <!-- ADMIN:START -->
+          <div class="field-row" id="backend-admin-key-row" style="margin-top: 8px;">
+            <label>Admin key</label>
+            <input type="password" id="backend-admin-key-input" class="input" placeholder="Only needed to manage other accounts" />
+          </div>
+          <!-- ADMIN:END -->
+        </div>
+
+        <!-- ADMIN:START -->
+        <div class="panel" id="admin-access-panel">
+          <h3>Admin access</h3>
+          <p class="muted small">A local-only unlock code for this installation - not a real account system, just a fun toggle for this app on this PC.</p>
+          <div class="field-row inline" style="margin-top: 8px;">
+            <input type="password" id="admin-code-input" class="input input-small" placeholder="Code" />
+            <button class="btn" id="btn-admin-unlock">Unlock</button>
+            <span class="mod-row-dep-tag" id="admin-unlocked-badge" hidden>Unlocked</span>
+          </div>
+        </div>
+        <!-- ADMIN:END -->
+
+        <div class="panel">
+          <h3>About</h3>
+          <p class="muted small" id="about-version">Nyx Client</p>
+          <p class="muted small" style="margin-top: 10px;">
+            Nyx Client is an independent, unofficial project and is not affiliated with, endorsed by, or
+            associated with Mojang Studios, Microsoft, or Minecraft in any way. Minecraft is a trademark of Mojang
+            Studios.
+          </p>
+          <div class="field-row inline" style="margin-top: 14px; gap: 10px;">
+            <button class="btn" id="btn-check-updates">Check for updates</button>
+            <span class="muted small" id="update-status"></span>
+          </div>
+          <div class="update-banner" id="update-banner" hidden>
+            <span id="update-banner-text">An update has been downloaded.</span>
+            <button class="btn btn-small btn-accent" id="btn-restart-update">Restart &amp; update</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- CUSTOMISATION VIEW -->
+      <section class="view" id="view-customisation">
+        <div class="view-header"><h1>Customisation</h1></div>
+
+        <div class="panel">
+          <h3>Theme</h3>
+          <div class="field-row">
+            <div class="segmented" id="theme-segmented">
+              <button class="segmented-btn" data-theme="dark">Dark</button>
+              <button class="segmented-btn" data-theme="light">Light</button>
+              <button class="segmented-btn" data-theme="black">Black</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Accent color</h3>
+          <div class="field-row">
+            <div class="swatch-row" id="accent-swatches">
+              <button class="swatch" data-color="#8b5cf6" style="background:#8b5cf6" title="Purple"></button>
+              <button class="swatch" data-color="#6f9d5a" style="background:#6f9d5a" title="Moss green"></button>
+              <button class="swatch" data-color="#4a7ccf" style="background:#4a7ccf" title="Blue"></button>
+              <button class="swatch" data-color="#c17f3e" style="background:#c17f3e" title="Copper"></button>
+              <button class="swatch" data-color="#c2508a" style="background:#c2508a" title="Rose"></button>
+              <button class="swatch" data-color="#3fa6a0" style="background:#3fa6a0" title="Teal"></button>
+              <button class="swatch" data-color="#d64545" style="background:#d64545" title="Crimson"></button>
+              <button class="swatch" data-color="#d6a72e" style="background:#d6a72e" title="Gold"></button>
+              <button class="swatch" data-color="#33b8c9" style="background:#33b8c9" title="Cyan"></button>
+              <button class="swatch" data-color="#6366f1" style="background:#6366f1" title="Indigo"></button>
+              <input type="color" class="swatch-custom" id="accent-custom" title="Custom color" />
+            </div>
+          </div>
+          <p class="muted small">Applies to the play button, active tab, and other highlights.</p>
+        </div>
+
+        <div class="panel">
+          <h3>Layout</h3>
+          <div class="field-row">
+            <label class="range-row-head" style="margin-bottom: 6px;">Sidebar position</label>
+            <div class="segmented" id="sidebar-position-segmented">
+              <button class="segmented-btn" data-sidebar-position="left">Left</button>
+              <button class="segmented-btn" data-sidebar-position="right">Right</button>
+            </div>
+          </div>
+          <div class="field-row" style="margin-top: 14px;">
+            <label class="range-row-head" style="margin-bottom: 6px;">Density</label>
+            <div class="segmented" id="density-segmented">
+              <button class="segmented-btn" data-density="comfortable">Comfortable</button>
+              <button class="segmented-btn" data-density="compact">Compact</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Interface style</h3>
+          <div class="field-row inline">
+            <div class="toggle" id="rounded-toggle"></div>
+            <label>Rounded corners (selectors, toggles, instances &amp; the Play button)</label>
+          </div>
+          <p class="muted small">When this is off, the Play button becomes a sword.</p>
+        </div>
+
+        <div class="panel">
+          <h3>Startup animation</h3>
+          <div class="field-row">
+            <div class="segmented" id="startup-animation-segmented">
+              <button class="segmented-btn" data-startup="full">Full</button>
+              <button class="segmented-btn" data-startup="quick">Quick</button>
+              <button class="segmented-btn" data-startup="off">Off</button>
+            </div>
+          </div>
+          <p class="muted small">The meteor-and-moon intro shown each time Nyx Client launches.</p>
+        </div>
+
+        <div class="panel">
+          <h3>Background</h3>
+          <div class="field-row inline">
+            <div class="toggle" id="night-sky-toggle"></div>
+            <label>Night sky background</label>
+          </div>
+
+          <div class="range-row" style="margin-top: 16px;">
+            <div class="range-row-head">
+              <label>Star density</label>
+              <span class="range-row-value" id="star-density-value">40</span>
+            </div>
+            <input type="range" class="range-input" id="star-density" min="0" max="150" step="5" value="40" />
+          </div>
+
+          <div class="range-row" style="margin-top: 14px;">
+            <div class="range-row-head">
+              <label>Shooting stars</label>
+              <span class="range-row-value" id="shooting-star-count-value">7</span>
+            </div>
+            <input type="range" class="range-input" id="shooting-star-count" min="0" max="15" step="1" value="7" />
+          </div>
+
+          <div class="range-row" style="margin-top: 14px;">
+            <div class="range-row-head">
+              <label>Shooting star speed</label>
+              <span class="range-row-value" id="shooting-star-speed-value">1.0x</span>
+            </div>
+            <input type="range" class="range-input" id="shooting-star-speed" min="0.5" max="2" step="0.1" value="1" />
+          </div>
+        </div>
+      </section>
+
+      <!-- PREMIUM VIEW -->
+      <section class="view" id="view-premium">
+        <div class="view-header"><h1>Premium</h1></div>
+
+        <div class="panel" id="premium-locked" hidden>
+          <h3>Premium required</h3>
+          <p class="muted">Your signed-in account doesn't have Premium. If someone granted it to you remotely, hit refresh below - otherwise it needs to come from the Admin tab.</p>
+          <button class="btn" id="btn-refresh-premium" style="margin-top: 8px;">Refresh status</button>
+        </div>
+
+        <div id="premium-content" hidden>
+          <div class="panel">
+            <h3>Deep system dive</h3>
+            <div class="specs-grid" id="premium-specs-grid"></div>
+          </div>
+
+          <div class="panel">
+            <h3>Launch statistics</h3>
+            <div class="specs-grid" id="premium-stats-grid"></div>
+          </div>
+
+          <div class="panel">
+            <h3>Custom JVM arguments</h3>
+            <p class="muted small">Power-user field — extra flags appended to the java command on launch. Leave blank unless you know what you're doing.</p>
+            <input type="text" id="premium-jvm-args" class="input" placeholder="e.g. -XX:+UseG1GC -XX:MaxGCPauseMillis=100" style="margin-top: 10px;" />
+          </div>
+
+          <div class="panel">
+            <h3>Recommended memory allocation</h3>
+            <p class="muted small" id="premium-memory-suggestion">Calculating…</p>
+            <button class="btn btn-accent" id="btn-apply-recommended-memory" style="margin-top: 10px;">Apply to Settings</button>
+          </div>
+
+          <div class="panel">
+            <h3>Instance backup &amp; restore</h3>
+            <p class="muted small">Back up the selected instance's mods, saves, and config to a zip file, or restore one as a new instance.</p>
+            <div class="field-row inline" style="margin-top: 10px; gap: 10px;">
+              <button class="btn" id="btn-backup-instance">Back up selected instance</button>
+              <button class="btn" id="btn-restore-instance">Restore from backup</button>
+            </div>
+          </div>
+
+          <div id="premium-recommendations"><!-- injected --></div>
+        </div>
+      </section>
+
+      <!-- ADMIN:START -->
+      <!-- ADMIN VIEW -->
+      <section class="view" id="view-admin">
+        <div class="view-header"><h1>Admin</h1></div>
+        <div class="panel">
+          <h3>Premium access</h3>
+          <p class="muted small">Saved to whichever account is currently signed in - no real payment/account system, just a flag on that account.</p>
+          <div class="field-row inline" style="margin-top: 12px;">
+            <div class="toggle" id="admin-premium-toggle"></div>
+            <label>Grant Premium to signed-in account</label>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Remote accounts</h3>
+          <p class="muted small">
+            Grant Premium (or ban) any account that's ever checked in from any PC - requires a backend URL and admin key
+            set in Settings -> Account sync.
+          </p>
+          <button class="btn" id="btn-refresh-remote-accounts" style="margin-top: 10px;">Refresh list</button>
+          <div class="mod-list" id="remote-accounts-list" style="margin-top: 10px;"><!-- injected --></div>
+        </div>
+
+        <div class="panel">
+          <h3>Join log</h3>
+          <p class="muted small">Every account that's signed in on this installation, in the order they were added.</p>
+          <div class="mod-list" id="admin-join-log" style="margin-top: 10px;"><!-- injected --></div>
+        </div>
+
+        <div class="panel">
+          <h3>Dev options</h3>
+          <div class="field-row inline" style="gap: 10px; flex-wrap: wrap;">
+            <button class="btn" id="btn-open-data-folder">Open app data folder</button>
+            <button class="btn" id="btn-open-logs-folder">Open logs folder</button>
+            <button class="btn" id="btn-open-instance-folder">Open selected instance folder</button>
+            <button class="btn" id="btn-copy-debug-info">Copy debug info</button>
+            <button class="btn" id="btn-clear-mod-manifest">Clear mod manifest (selected instance)</button>
+            <button class="btn btn-danger" id="btn-reset-settings">Reset all settings</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Raw settings</h3>
+          <p class="muted small">Exactly what's stored on disk right now, for debugging.</p>
+          <pre class="console" id="admin-raw-settings" style="max-height: 220px; margin-top: 10px; background: var(--bg-2); border: 1px solid var(--line-soft); padding: 12px;"></pre>
+        </div>
+      </section>
+      <!-- ADMIN:END -->
+
+    </main>
+  </div>
+
+  <!-- New instance modal -->
+  <div class="modal-backdrop" id="modal-backdrop" hidden>
+    <div class="modal">
+      <h2>New instance</h2>
+      <div class="field-row">
+        <label>Name</label>
+        <input type="text" id="new-name" class="input" placeholder="e.g. Modded 1.21" />
+      </div>
+      <div class="field-row inline">
+        <div>
+          <label>Minecraft version</label>
+          <select id="new-version" class="select"></select>
+        </div>
+        <div>
+          <label>Loader</label>
+          <select id="new-loader" class="select">
+            <option value="fabric">Fabric</option>
+            <option value="vanilla">Vanilla</option>
+            <option value="forge">Forge</option>
+            <option value="quilt">Quilt</option>
+          </select>
+        </div>
+        <div>
+          <label>Loader version</label>
+          <select id="new-loader-version" class="select"></select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="btn-cancel-new">Cancel</button>
+        <button class="btn btn-accent" id="btn-create-new">Create instance</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="vendor/three.min.js"></script>
+  <script src="vendor/skinview3d.bundle.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>

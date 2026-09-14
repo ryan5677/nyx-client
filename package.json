@@ -1,0 +1,69 @@
+{
+  "name": "nyx-client",
+  "productName": "Nyx Client",
+  "version": "0.3.0",
+  "description": "A self-hosted Minecraft launcher: pick & switch versions, drag-and-drop mods, a built-in Modrinth/CurseForge browser, multiple accounts, hardware-aware FPS mod recommendations, and modpack installs. No cosmetics.",
+  "main": "main.js",
+  "author": "Nyx Client Project",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build:public": "node scripts/build-variant.js public",
+    "build:dev": "node scripts/build-variant.js dev",
+    "build:all": "node scripts/build-variant.js public && node scripts/build-variant.js dev"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "electron-updater": "^6.8.9",
+    "minecraft-java-core": "^4.2.8",
+    "pngjs": "^7.0.0",
+    "systeminformation": "^5.23.5"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.nyxclientproject.launcher",
+    "productName": "Nyx Client",
+    "asar": true,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "lib/**/*",
+      "src/**/*",
+      "package.json",
+      "!**/*.map"
+    ],
+    "icon": "build/icon.ico",
+    "publish": {
+      "provider": "github",
+      "owner": "ryan5677",
+      "repo": "nyx-client"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "sign": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "Nyx_Client_Setup_${version}.${ext}"
+    }
+  }
+}
