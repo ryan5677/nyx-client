@@ -1245,13 +1245,14 @@ function spawnIntroStars() {
   }
 }
 
-function playIntroAnimation(mode) {
+function playIntroAnimation(mode, onDone) {
   const overlay = $('#intro-overlay');
   const appEl = $('#app');
-  if (!overlay || !appEl) return;
+  if (!overlay || !appEl) { onDone?.(); return; }
 
   if (mode === 'off') {
     overlay.hidden = true;
+    onDone?.();
     return;
   }
 
@@ -1303,6 +1304,7 @@ function playIntroAnimation(mode) {
     later(() => {
       overlay.hidden = true;
       appEl.classList.remove('intro-entering');
+      onDone?.();
     }, revealDur + 50);
   }
 
@@ -1368,11 +1370,26 @@ anvil.updater.onStatus((status) => {
 $('#btn-check-updates')?.addEventListener('click', () => anvil.updater.check());
 $('#btn-restart-update')?.addEventListener('click', () => anvil.updater.install());
 
+// ------------------------------------------------------------ Update popup
+/** Shown once automatically the first launch after an auto-update lands - never on a fresh install, since that's not "updated," it's just new. */
+async function checkForUpdatePopup() {
+  try {
+    const currentVersion = await anvil.updater.currentVersion();
+    const lastSeen = state.settings.lastSeenVersion;
+    if (lastSeen && lastSeen !== currentVersion) {
+      $('#update-popup-version').textContent = currentVersion;
+      $('#update-popup-backdrop').hidden = false;
+    }
+    if (lastSeen !== currentVersion) saveSettings({ lastSeenVersion: currentVersion });
+  } catch { /* not critical - skip quietly */ }
+}
+$('#btn-update-popup-close')?.addEventListener('click', () => { $('#update-popup-backdrop').hidden = true; });
+
 // ------------------------------------------------------------------- Boot
 (async function init() {
   state.variant = await anvil.app.variant();
   await loadSettings();
-  playIntroAnimation(state.settings.startupAnimation || 'full');
+  playIntroAnimation(state.settings.startupAnimation || 'full', checkForUpdatePopup);
   regenerateNightSky();
   await refreshAccountUI();
   anvil.auth.syncPremium().then((account) => {

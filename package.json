@@ -1,7 +1,7 @@
 {
   "name": "nyx-client",
   "productName": "Nyx Client",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A self-hosted Minecraft launcher: pick & switch versions, drag-and-drop mods, a built-in Modrinth/CurseForge browser, multiple accounts, hardware-aware FPS mod recommendations, and modpack installs. No cosmetics.",
   "main": "main.js",
   "author": "Nyx Client Project",

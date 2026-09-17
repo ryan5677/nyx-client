@@ -483,6 +483,8 @@ function wireViewModeToggle() {
     $('#skin-stage-3d').hidden = mode !== '3d';
     $('#skin-stage-2d').hidden = mode !== '2d';
     $('#skin-cursor-pos').textContent = mode === '2d' ? 'Pixel: —' : '\u00A0';
+    // The 3D stage read as 0x0 while hidden, so re-measure it now that it's visible again.
+    if (mode === '3d') requestAnimationFrame(resizeSkinViewer);
   }));
 }
 
@@ -666,13 +668,44 @@ function setup2DCanvas() {
   });
 }
 
+/**
+ * skinview3d sizes its internal camera/renderer from the width/height given
+ * at construction time - CSS stretching the canvas afterward (which this
+ * page does, since the stage fills most of the window) doesn't tell it
+ * anything, so the aspect ratio it's actually rendering at silently drifts
+ * from the box it's displayed in and the model ends up looking off-center.
+ * Keeping viewer.width/height in sync with the real container size on
+ * setup, on window resize, and whenever the 3D stage becomes visible again
+ * after being hidden (its clientWidth/Height read as 0 while `hidden`) is
+ * what actually keeps it centered.
+ */
+function resizeSkinViewer() {
+  if (!skinEditor.viewer) return;
+  const el = $('#skin-stage-3d');
+  const w = el.clientWidth;
+  const h = el.clientHeight;
+  if (w > 0 && h > 0) {
+    skinEditor.viewer.width = w;
+    skinEditor.viewer.height = h;
+  }
+}
+
 function setup3DViewer() {
-  skinEditor.viewer = new skinview3d.SkinViewer({ canvas: $('#skin-3d-canvas'), width: 300, height: 380 });
+  const stage = $('#skin-stage-3d');
+  skinEditor.viewer = new skinview3d.SkinViewer({
+    canvas: $('#skin-3d-canvas'),
+    width: stage.clientWidth || 700,
+    height: stage.clientHeight || 560,
+  });
   skinEditor.viewer.autoRotate = false;
   skinEditor.viewer.zoom = 0.9;
   skinEditor.viewerReady = true;
   applyAnimation();
   setupSkin3DPaint();
+  window.addEventListener('resize', resizeSkinViewer);
+  // The stage's layout box can settle a frame after construction (fonts/
+  // grid sizing), so resize once more right after to catch that.
+  requestAnimationFrame(resizeSkinViewer);
 }
 
 // ------------------------------------------------------------------ Init

@@ -513,13 +513,25 @@ h3 { font-family: var(--font-display); font-size: 13px; margin: 0 0 12px; color:
   box-shadow: 0 0 20px 5px rgba(255,255,255,.6);
   z-index: 2;
 }
+/* Tapered comet tail: wide right at the star, narrowing to a fine point at
+   the far end - a plain rectangle read as a blurry bar rather than a trail.
+   Sits in local +x before the parent's -45deg rotation, which lands it
+   pointing back toward the top-right corner the star came from. */
 .intro-meteor::before {
-  /* Trail extends in local +x (before the parent's -45deg rotation is applied), which lands it pointing back up toward the top-right corner the star came from - directly opposite its travel direction. */
   content: ''; position: absolute; top: 50%; left: 100%;
-  width: 240px; height: 4px; transform: translateY(-50%);
+  width: 380px; height: 18px; transform: translateY(-50%);
   transform-origin: left center;
-  background: linear-gradient(90deg, #fff, rgba(255,255,255,.85) 25%, transparent);
-  border-radius: 999px;
+  background: linear-gradient(90deg, #fff 0%, rgba(255,255,255,.95) 8%, rgba(var(--accent-rgb), .6) 42%, transparent 94%);
+  clip-path: polygon(0% 20%, 0% 80%, 100% 50%);
+}
+/* A softer, wider glow behind the tapered core for extra richness. */
+.intro-meteor::after {
+  content: ''; position: absolute; top: 50%; left: 100%;
+  width: 210px; height: 40px; transform: translateY(-50%);
+  transform-origin: left center;
+  background: radial-gradient(ellipse at left center, rgba(255,255,255,.32), transparent 72%);
+  clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
+  z-index: -1;
 }
 .intro-meteor.flying {
   opacity: 1;

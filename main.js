@@ -51,6 +51,7 @@ const DEFAULT_SETTINGS = {
   backendAdminKey: '',
   customJvmArgs: '',
   startupAnimation: 'full', // 'full' | 'quick' | 'off'
+  lastSeenVersion: null, // drives the "you've been updated" popup - set on every boot, popup only fires when this differs from the running version and isn't null (i.e. never on a fresh install)
 };
 
 /**

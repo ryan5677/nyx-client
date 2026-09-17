@@ -595,6 +595,18 @@
     </div>
   </div>
 
+  <!-- Shown once, automatically, the first time the app launches after an
+       auto-update landed - never on a first-ever install. -->
+  <div class="modal-backdrop" id="update-popup-backdrop" hidden>
+    <div class="modal">
+      <h2>Updated to v<span id="update-popup-version">0.0.0</span></h2>
+      <p class="muted" style="margin-top: 10px;">Nyx Client updated itself in the background - no download or install needed on your end.</p>
+      <div class="modal-actions">
+        <button class="btn btn-accent" id="btn-update-popup-close">Got it</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" hidden></div>
 
   <script src="renderer.js"></script>
