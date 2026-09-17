@@ -504,18 +504,21 @@ h3 { font-family: var(--font-display); font-size: 13px; margin: 0 0 12px; color:
 .intro-moon.shake { animation: intro-moon-shake var(--intro-impact-dur) ease; }
 
 .intro-meteor {
-  position: absolute; width: 12px; height: 12px;
-  left: calc(50% + 230px); top: 10%;
-  transform: translate(-50%, -50%) rotate(-34deg);
+  position: absolute; width: 20px; height: 20px;
+  left: 106%; top: -6%;
+  transform: translate(-50%, -50%) rotate(-45deg);
   background: linear-gradient(155deg, #fff, var(--accent-bright));
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  clip-path: polygon(50% 0%, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0% 50%, 39% 35%);
   opacity: 0;
-  box-shadow: 0 0 18px 4px rgba(255,255,255,.55);
+  box-shadow: 0 0 20px 5px rgba(255,255,255,.6);
+  z-index: 2;
 }
 .intro-meteor::before {
-  content: ''; position: absolute; top: 50%; right: 6px;
-  width: 170px; height: 4px; transform: translateY(-50%);
-  background: linear-gradient(270deg, transparent, rgba(255,255,255,.85) 55%, #fff);
+  /* Trail extends in local +x (before the parent's -45deg rotation is applied), which lands it pointing back up toward the top-right corner the star came from - directly opposite its travel direction. */
+  content: ''; position: absolute; top: 50%; left: 100%;
+  width: 240px; height: 4px; transform: translateY(-50%);
+  transform-origin: left center;
+  background: linear-gradient(90deg, #fff, rgba(255,255,255,.85) 25%, transparent);
   border-radius: 999px;
 }
 .intro-meteor.flying {
@@ -579,9 +582,9 @@ h3 { font-family: var(--font-display); font-size: 13px; margin: 0 0 12px; color:
 .intro-skip:hover { opacity: 1; color: var(--text-0); }
 
 @keyframes intro-meteor-fly {
-  0%   { left: calc(50% + 230px); top: 10%; opacity: 1; }
+  0%   { left: 106%; top: -6%; opacity: 1; }
   92%  { opacity: 1; }
-  100% { left: 50%; top: 52%; opacity: 0; }
+  100% { left: 50%; top: 51%; opacity: 0; }
 }
 @keyframes intro-flash-burst {
   0%   { transform: translate(-50%, -50%) scale(0); opacity: 0; }
@@ -630,14 +633,23 @@ h3 { font-family: var(--font-display); font-size: 13px; margin: 0 0 12px; color:
 }
 
 /* ============================================================= Skin editor
+   The 3D view and the 2D pixel view share one "stage" area and are toggled,
+   never shown side by side - that's what caused the layout bug where the
+   layers panel visually ended up under the 3D view: a WebGL canvas renders
+   in its own GPU compositing layer, and Chromium can let that bleed over
+   neighboring DOM content unless the container explicitly isolates it
+   (hence `isolation: isolate; contain: layout paint;` below).
    ------------------------------------------------------------------------ */
-.skin-editor-layout {
+.skin-editor-layout-v2 {
   display: grid;
-  grid-template-columns: 240px minmax(320px, 1fr) 300px;
+  grid-template-columns: 240px minmax(480px, 1fr) 220px;
   gap: 16px;
   align-items: start;
+  height: calc(100vh - 40px - 56px - 20px); /* viewport minus topbar/padding, so the stage actually gets to be "large" */
+  min-height: 520px;
 }
-.skin-editor-tools, .skin-editor-canvas-wrap, .skin-editor-preview { max-width: none; margin-bottom: 0; }
+.skin-editor-tools, .skin-editor-stage, .skin-editor-layers { max-width: none; margin-bottom: 0; height: 100%; box-sizing: border-box; overflow-y: auto; }
+.skin-editor-stage { display: flex; flex-direction: column; overflow: hidden; }
 
 .skin-tool-row { display: flex; gap: 8px; }
 .skin-tool-btn {
@@ -648,7 +660,34 @@ h3 { font-family: var(--font-display); font-size: 13px; margin: 0 0 12px; color:
 .skin-tool-btn:hover { color: var(--text-0); background: var(--bg-3); }
 .skin-tool-btn.active { border-color: var(--accent); color: var(--accent-bright); background: rgba(var(--accent-rgb), .12); }
 
-.skin-canvas-scroll { overflow: auto; max-height: 560px; display: flex; align-items: center; justify-content: center; padding: 10px; background: var(--bg-0); border: 1px solid var(--line-soft); }
+.skin-stage-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+.skin-stage-topbar-right { display: flex; gap: 16px; align-items: center; }
+
+.skin-stage-3d, .skin-stage-2d {
+  flex: 1; min-height: 0;
+  position: relative;
+  isolation: isolate;
+  contain: layout paint;
+  border: 1px solid var(--line-soft);
+}
+.skin-stage-3d {
+  background: radial-gradient(ellipse 70% 55% at 50% 38%, #454b63 0%, #2f3344 55%, #23262f 100%);
+}
+.skin-stage-3d::after {
+  content: ''; position: absolute; left: 50%; bottom: 8%; width: 46%; height: 10%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse, rgba(0,0,0,.45), transparent 72%);
+  pointer-events: none;
+}
+.skin-stage-3d canvas { width: 100%; height: 100%; display: block; position: relative; z-index: 1; cursor: crosshair; }
+.skin-3d-hint {
+  position: absolute; left: 10px; bottom: 8px; z-index: 2;
+  font-size: 11px; color: rgba(255,255,255,.65); pointer-events: none;
+  font-family: var(--font-mono);
+}
+
+.skin-stage-2d { background: var(--bg-0); display: flex; align-items: center; justify-content: center; }
+.skin-canvas-scroll { overflow: auto; max-height: 100%; max-width: 100%; display: flex; align-items: center; justify-content: center; padding: 10px; }
 .skin-canvas-frame {
   position: relative; flex-shrink: 0;
   background-image:
@@ -666,27 +705,6 @@ h3 { font-family: var(--font-display); font-size: 13px; margin: 0 0 12px; color:
 }
 #skin-grid-canvas { pointer-events: none; }
 
-.skin-3d-frame {
-  width: 100%; height: 380px; position: relative; overflow: hidden;
-  border: 1px solid var(--line-soft);
-  background:
-    radial-gradient(ellipse 70% 55% at 50% 38%, #454b63 0%, #2f3344 55%, #23262f 100%);
-}
-.skin-3d-frame::after {
-  content: ''; position: absolute; left: 50%; bottom: 8%; width: 46%; height: 10%;
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse, rgba(0,0,0,.45), transparent 72%);
-  pointer-events: none;
-}
-.skin-3d-frame canvas { width: 100%; height: 100%; display: block; position: relative; z-index: 1; }
-.skin-3d-frame.paint-mode canvas { cursor: crosshair; }
-.skin-3d-hint {
-  position: absolute; left: 10px; bottom: 8px; z-index: 2;
-  font-size: 11px; color: rgba(255,255,255,.65); pointer-events: none;
-  font-family: var(--font-mono);
-}
-
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--bg-3); border: 2px solid var(--bg-0); }
-

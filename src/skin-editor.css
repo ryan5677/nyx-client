@@ -1,0 +1,42 @@
+html, body.skin-editor-page {
+  height: 100%; margin: 0;
+  position: relative;
+  background: #0b0a22;
+  overflow: hidden;
+}
+body.skin-editor-page { overflow: auto; }
+
+.skin-editor-app {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  padding: 20px 24px 32px;
+  box-sizing: border-box;
+}
+
+.skin-editor-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+}
+.skin-editor-brand { display: flex; align-items: center; gap: 10px; }
+.skin-editor-brand .brand-mark { width: 26px; height: 26px; object-fit: contain; filter: drop-shadow(0 0 8px rgba(var(--accent-rgb), .4)); }
+.skin-editor-brand-text {
+  font-family: var(--font-display); font-weight: 700; font-size: 18px;
+  letter-spacing: .5px; color: var(--text-0);
+}
+.skin-editor-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.skin-editor-layers { display: flex; flex-direction: column; }
+.skin-layers-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow-y: auto; }
+.skin-layer-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; background: var(--bg-2); border: 1px solid var(--line-soft);
+  cursor: pointer; font-size: 13px; color: var(--text-1);
+}
+.skin-layer-row:hover { background: var(--bg-3); }
+.skin-layer-row.active { border-color: var(--accent); color: var(--text-0); background: rgba(var(--accent-rgb), .1); }
+.skin-layer-visibility {
+  width: 20px; height: 20px; flex-shrink: 0; border: none; background: none; cursor: pointer;
+  color: var(--text-1); font-size: 14px; display: flex; align-items: center; justify-content: center;
+}
+.skin-layer-visibility.hidden-layer { opacity: .35; }
+.skin-layer-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

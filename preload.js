@@ -7,6 +7,7 @@ const invoke = (channel) => (...args) => ipcRenderer.invoke(channel, ...args);
 contextBridge.exposeInMainWorld('anvil', {
   app: {
     variant: invoke('app:variant'),
+    openSkinEditor: invoke('app:openSkinEditor'),
   },
   updater: {
     check: invoke('updater:check'),

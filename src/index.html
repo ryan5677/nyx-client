@@ -14,9 +14,9 @@
   <div class="intro-overlay" id="intro-overlay" aria-hidden="true">
     <div class="intro-sky"></div>
     <div class="intro-stars" id="intro-stars"></div>
+    <div class="intro-meteor" id="intro-meteor"></div>
     <div class="intro-stage" id="intro-stage">
       <img class="intro-moon" id="intro-moon" src="assets/nyx-glyph.png" alt="" />
-      <div class="intro-meteor" id="intro-meteor"></div>
       <div class="intro-flash" id="intro-flash"></div>
       <div class="intro-shockwave" id="intro-shockwave"></div>
       <div class="intro-shockwave intro-shockwave-2" id="intro-shockwave-2"></div>
@@ -250,121 +250,6 @@
         </div>
 
         <div class="mod-list" id="account-list"><!-- injected --></div>
-      </section>
-
-      <!-- SKIN EDITOR VIEW -->
-      <section class="view" id="view-skin-editor">
-        <div class="view-header">
-          <div>
-            <h1>Skin Editor</h1>
-            <p class="muted">Paint a skin pixel-by-pixel and preview it in 3D before uploading.</p>
-          </div>
-          <div class="view-header-actions">
-            <button class="btn" id="btn-skin-new">New blank</button>
-            <button class="btn" id="btn-skin-load-current">Load my skin</button>
-            <button class="btn" id="btn-skin-import">Import PNG…</button>
-            <button class="btn" id="btn-skin-export">Export PNG…</button>
-            <button class="btn btn-accent" id="btn-skin-upload">Upload to account</button>
-          </div>
-        </div>
-
-        <div class="skin-editor-layout">
-          <div class="panel skin-editor-tools">
-            <h3>Tools</h3>
-            <div class="skin-tool-row" id="skin-tool-row">
-              <button class="skin-tool-btn active" data-tool="pencil" title="Pencil">&#9998;</button>
-              <button class="skin-tool-btn" data-tool="eraser" title="Eraser">&#11036;</button>
-              <button class="skin-tool-btn" data-tool="fill" title="Fill bucket">&#9911;</button>
-              <button class="skin-tool-btn" data-tool="eyedropper" title="Eyedropper">&#9679;</button>
-            </div>
-
-            <div class="field-row" style="margin-top: 16px;">
-              <label>Brush size</label>
-              <div class="segmented" id="skin-brush-segmented">
-                <button class="segmented-btn active" data-brush="1">1px</button>
-                <button class="segmented-btn" data-brush="2">2px</button>
-                <button class="segmented-btn" data-brush="3">3px</button>
-              </div>
-            </div>
-
-            <div class="field-row" style="margin-top: 16px;">
-              <label>Color</label>
-              <div class="swatch-row" id="skin-color-swatches">
-                <button class="swatch" data-color="#3b2415" style="background:#3b2415" title="Dark brown"></button>
-                <button class="swatch" data-color="#7a4a2a" style="background:#7a4a2a" title="Brown"></button>
-                <button class="swatch" data-color="#d9a066" style="background:#d9a066" title="Skin tone"></button>
-                <button class="swatch" data-color="#f2d3b3" style="background:#f2d3b3" title="Light skin tone"></button>
-                <button class="swatch" data-color="#ffffff" style="background:#ffffff" title="White"></button>
-                <button class="swatch" data-color="#1a1a1a" style="background:#1a1a1a" title="Black"></button>
-                <button class="swatch" data-color="#4a7ccf" style="background:#4a7ccf" title="Blue"></button>
-                <button class="swatch" data-color="#d64545" style="background:#d64545" title="Red"></button>
-                <button class="swatch" data-color="#6f9d5a" style="background:#6f9d5a" title="Green"></button>
-                <button class="swatch" data-color="#d6a72e" style="background:#d6a72e" title="Gold"></button>
-                <input type="color" class="swatch-custom" id="skin-color-custom" title="Custom color" value="#8b5cf6" />
-              </div>
-              <div class="field-row inline" style="margin-top: 10px;">
-                <input type="text" id="skin-color-hex" class="input input-small" maxlength="7" placeholder="#8b5cf6" />
-              </div>
-            </div>
-
-            <div class="field-row" style="margin-top: 16px;">
-              <label class="range-row-head" style="margin-bottom: 6px;">Model</label>
-              <div class="segmented" id="skin-model-segmented">
-                <button class="segmented-btn active" data-model="classic">Classic</button>
-                <button class="segmented-btn" data-model="slim">Slim</button>
-              </div>
-            </div>
-
-            <div class="field-row inline" style="margin-top: 16px;">
-              <div class="toggle" id="skin-grid-toggle"></div>
-              <label>Show part guides</label>
-            </div>
-
-            <div class="field-row inline">
-              <div class="toggle" id="skin-overlay-toggle"></div>
-              <label>Show hat/jacket overlay in 3D</label>
-            </div>
-
-            <div class="range-row" style="margin-top: 16px;">
-              <div class="range-row-head">
-                <label>Zoom</label>
-                <span class="range-row-value" id="skin-zoom-value">8x</span>
-              </div>
-              <input type="range" class="range-input" id="skin-zoom" min="4" max="16" step="1" value="8" />
-            </div>
-
-            <div class="field-row inline" style="margin-top: 16px; gap: 8px;">
-              <button class="btn btn-small" id="btn-skin-undo">Undo</button>
-              <button class="btn btn-small" id="btn-skin-redo">Redo</button>
-            </div>
-          </div>
-
-          <div class="panel skin-editor-canvas-wrap">
-            <h3>Texture</h3>
-            <div class="skin-canvas-scroll" id="skin-canvas-scroll">
-              <div class="skin-canvas-frame" id="skin-canvas-frame">
-                <canvas id="skin-edit-canvas" width="64" height="64"></canvas>
-                <canvas id="skin-grid-canvas" width="64" height="64"></canvas>
-              </div>
-            </div>
-            <p class="muted small" id="skin-cursor-pos">Pixel: —</p>
-          </div>
-
-          <div class="panel skin-editor-preview">
-            <div class="field-row inline" style="justify-content: space-between;">
-              <h3 style="margin: 0;">3D Preview</h3>
-              <label class="checkbox">
-                <input type="checkbox" id="skin-3d-paint-toggle" />
-                Paint on model
-              </label>
-            </div>
-            <div class="skin-3d-frame" id="skin-3d-frame">
-              <canvas id="skin-3d-canvas"></canvas>
-              <span class="skin-3d-hint" id="skin-3d-hint">Drag to rotate &middot; scroll to zoom</span>
-            </div>
-            <p class="muted small">Paint on model: left-click paints, right-drag rotates. Off: drag rotates as usual.</p>
-          </div>
-        </div>
       </section>
 
       <!-- SETTINGS VIEW -->
@@ -712,8 +597,6 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="vendor/three.min.js"></script>
-  <script src="vendor/skinview3d.bundle.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

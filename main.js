@@ -209,6 +209,34 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, 'src', 'index.html'));
 }
 
+let skinEditorWindow = null;
+
+/** Skin Editor lives in its own window - singleton, focuses the existing one instead of opening duplicates. */
+function openSkinEditorWindow() {
+  if (skinEditorWindow && !skinEditorWindow.isDestroyed()) {
+    skinEditorWindow.focus();
+    return;
+  }
+  skinEditorWindow = new BrowserWindow({
+    width: 1360,
+    height: 860,
+    minWidth: 1080,
+    minHeight: 700,
+    backgroundColor: '#0b0a22',
+    autoHideMenuBar: true,
+    icon: path.join(__dirname, 'build', 'icon.png'),
+    parent: mainWindow || undefined,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+  });
+  skinEditorWindow.loadFile(path.join(__dirname, 'src', 'skin-editor.html'));
+  skinEditorWindow.on('closed', () => { skinEditorWindow = null; });
+}
+
 /** First run: create a Default instance on Fabric + latest release, with Fabric API pre-installed. */
 async function ensureDefaultInstance() {
   if (instances.all().length > 0) return;
@@ -357,6 +385,7 @@ ipcMain.handle('auth:faceIcon', async (_e, uuid) => {
 });
 
 ipcMain.handle('app:variant', () => VARIANT);
+ipcMain.handle('app:openSkinEditor', () => openSkinEditorWindow());
 
 // ---------------------------------------------------------------------------
 // Auto-update (electron-updater, GitHub Releases)
@@ -379,8 +408,9 @@ ipcMain.handle('skins:current', async () => {
   }
 });
 
-ipcMain.handle('skins:importFile', async () => {
-  const res = await dialog.showOpenDialog(mainWindow, {
+ipcMain.handle('skins:importFile', async (e) => {
+  const parentWin = BrowserWindow.fromWebContents(e.sender) || mainWindow;
+  const res = await dialog.showOpenDialog(parentWin, {
     title: 'Import skin',
     filters: [{ name: 'PNG skin', extensions: ['png'] }],
     properties: ['openFile'],
@@ -390,8 +420,9 @@ ipcMain.handle('skins:importFile', async () => {
   return { dataUrl: `data:image/png;base64,${buf.toString('base64')}` };
 });
 
-ipcMain.handle('skins:exportFile', async (_e, { dataUrl, suggestedName }) => {
-  const res = await dialog.showSaveDialog(mainWindow, {
+ipcMain.handle('skins:exportFile', async (e, { dataUrl, suggestedName }) => {
+  const parentWin = BrowserWindow.fromWebContents(e.sender) || mainWindow;
+  const res = await dialog.showSaveDialog(parentWin, {
     title: 'Save skin',
     defaultPath: suggestedName || 'skin.png',
     filters: [{ name: 'PNG skin', extensions: ['png'] }],
