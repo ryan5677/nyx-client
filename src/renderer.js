@@ -96,6 +96,7 @@ function switchView(view) {
   if (view === 'accounts') refreshAccountUI();
   if (view === 'premium') loadPremiumView();
   if (view === 'admin') loadAdminView();
+  if (view === 'ingame') renderInGameUI();
 }
 
 $$('.nav-item, .btn-link[data-view]').forEach((btn) => {
@@ -663,6 +664,9 @@ async function loadSettings() {
   applyVariant();
   applyAppearance(state.settings);
   renderCustomisationUI();
+  renderInGameUI();
+  $('#launch-startup-toggle')?.classList.toggle('on', !!state.settings.launchOnStartup);
+  $('#launch-minimized-toggle')?.classList.toggle('on', state.settings.launchMinimized !== false);
   anvil.dev.debugInfo().then((info) => {
     $('#about-version').textContent = info.split('\n')[0];
   }).catch(() => {});
@@ -1369,6 +1373,61 @@ anvil.updater.onStatus((status) => {
 
 $('#btn-check-updates')?.addEventListener('click', () => anvil.updater.check());
 $('#btn-restart-update')?.addEventListener('click', () => anvil.updater.install());
+
+// --------------------------------------------------------------- In-Game
+/** Reflects the saved in-game options into the In-Game tab's controls. */
+function renderInGameUI() {
+  const s = state.settings;
+  $('#ingame-menu-theme-toggle')?.classList.toggle('on', s.inGameCustomMenuTheme !== false);
+  $('#ingame-fps-toggle')?.classList.toggle('on', !!s.inGameFpsCounter);
+  $('#ingame-coords-toggle')?.classList.toggle('on', !!s.inGameCoords);
+  $('#ingame-cps-toggle')?.classList.toggle('on', !!s.inGameCpsCounter);
+  $('#ingame-hidehands-toggle')?.classList.toggle('on', !!s.inGameHideHandsInF1);
+  const accent = s.inGameAccentColor || '#8b5cf6';
+  if ($('#ingame-accent-color')) $('#ingame-accent-color').value = accent;
+  if ($('#ingame-accent-hex')) $('#ingame-accent-hex').value = accent;
+  $$('#ingame-fps-position .segmented-btn').forEach((b) => b.classList.toggle('active', b.dataset.pos === (s.inGameFpsPosition || 'top-left')));
+}
+
+function bindInGameToggle(id, key, invertDefault = false) {
+  $(`#${id}`)?.addEventListener('click', () => {
+    const current = invertDefault ? state.settings[key] !== false : !!state.settings[key];
+    saveSettings({ [key]: !current });
+    renderInGameUI();
+  });
+}
+bindInGameToggle('ingame-menu-theme-toggle', 'inGameCustomMenuTheme', true);
+bindInGameToggle('ingame-fps-toggle', 'inGameFpsCounter');
+bindInGameToggle('ingame-coords-toggle', 'inGameCoords');
+bindInGameToggle('ingame-cps-toggle', 'inGameCpsCounter');
+bindInGameToggle('ingame-hidehands-toggle', 'inGameHideHandsInF1');
+
+$('#ingame-accent-color')?.addEventListener('input', (e) => {
+  saveSettings({ inGameAccentColor: e.target.value });
+  renderInGameUI();
+});
+$('#ingame-accent-hex')?.addEventListener('change', (e) => {
+  let v = e.target.value.trim();
+  if (v && !v.startsWith('#')) v = `#${v}`;
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) saveSettings({ inGameAccentColor: v });
+  renderInGameUI();
+});
+$$('#ingame-fps-position .segmented-btn').forEach((btn) => btn.addEventListener('click', () => {
+  saveSettings({ inGameFpsPosition: btn.dataset.pos });
+  renderInGameUI();
+}));
+
+// --------------------------------------------------------------- Startup
+$('#launch-startup-toggle')?.addEventListener('click', () => {
+  const next = !state.settings.launchOnStartup;
+  saveSettings({ launchOnStartup: next });
+  $('#launch-startup-toggle').classList.toggle('on', next);
+});
+$('#launch-minimized-toggle')?.addEventListener('click', () => {
+  const next = !(state.settings.launchMinimized !== false);
+  saveSettings({ launchMinimized: next });
+  $('#launch-minimized-toggle').classList.toggle('on', next);
+});
 
 // ------------------------------------------------------------ Update popup
 /** Shown once automatically the first launch after an auto-update lands - never on a fresh install, since that's not "updated," it's just new. */

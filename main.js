@@ -18,6 +18,7 @@ const modpacks = require('./lib/modpacks');
 const mcping = require('./lib/mcping');
 const lan = require('./lib/lan');
 const updater = require('./lib/updater');
+const ingame = require('./lib/ingame');
 const { VARIANT } = require('./lib/variant');
 const { DEFAULT_BACKEND_URL } = require('./lib/config');
 
@@ -52,6 +53,20 @@ const DEFAULT_SETTINGS = {
   customJvmArgs: '',
   startupAnimation: 'full', // 'full' | 'quick' | 'off'
   lastSeenVersion: null, // drives the "you've been updated" popup - set on every boot, popup only fires when this differs from the running version and isn't null (i.e. never on a fresh install)
+  launchOnStartup: false, // register with Windows to start when the PC does
+  launchMinimized: true, // when launched at startup, come up minimised rather than grabbing focus
+
+  // In-game options. These are written out to a config file that the Nyx
+  // companion Fabric mod reads at runtime - the launcher itself cannot
+  // change anything inside Minecraft's own rendering, so none of these do
+  // anything until that mod is installed in the instance.
+  inGameAccentColor: '#8b5cf6',
+  inGameFpsCounter: false,
+  inGameFpsPosition: 'top-left', // 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+  inGameCoords: false,
+  inGameCustomMenuTheme: true,
+  inGameHideHandsInF1: false,
+  inGameCpsCounter: false,
 };
 
 /**
@@ -191,7 +206,15 @@ function tagActiveAccount(patch) {
   return accounts[activeUuid];
 }
 
+/** True when Windows (not the user) launched us at login - we add this flag ourselves in applyLaunchOnStartup below. */
+function launchedAtStartup() {
+  return process.argv.includes('--startup');
+}
+
 function createWindow() {
+  const settings = { ...DEFAULT_SETTINGS, ...settingsStore.read() };
+  const startHidden = launchedAtStartup() && settings.launchMinimized;
+
   mainWindow = new BrowserWindow({
     width: 1180,
     height: 760,
@@ -200,6 +223,7 @@ function createWindow() {
     backgroundColor: '#181b1d',
     autoHideMenuBar: true,
     icon: path.join(__dirname, 'build', 'icon.png'),
+    show: !startHidden, // avoids a visible flash-then-minimise at login
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -207,7 +231,31 @@ function createWindow() {
       sandbox: false,
     },
   });
+  if (startHidden) {
+    mainWindow.once('ready-to-show', () => {
+      mainWindow.minimize();
+      mainWindow.show();
+    });
+  }
   mainWindow.loadFile(path.join(__dirname, 'src', 'index.html'));
+}
+
+/**
+ * Registers (or clears) the Windows login-item entry. The --startup flag is
+ * how the app later knows it was auto-launched rather than opened by hand,
+ * which is what gates the start-minimised behaviour.
+ */
+function applyLaunchOnStartup(settings) {
+  if (process.platform !== 'win32') return;
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: !!settings.launchOnStartup,
+      path: process.execPath,
+      args: ['--startup'],
+    });
+  } catch (err) {
+    console.error('Could not update launch-on-startup setting:', err);
+  }
 }
 
 let skinEditorWindow = null;
@@ -269,6 +317,8 @@ app.whenReady().then(async () => {
 
   await ensureDefaultInstance();
   createWindow();
+  applyLaunchOnStartup({ ...DEFAULT_SETTINGS, ...settingsStore.read() });
+  ingame.writeConfig(userData, { ...DEFAULT_SETTINGS, ...settingsStore.read() });
   updater.init(mainWindow);
   // Quiet background check a few seconds after launch, so it's not competing
   // with the startup animation or the initial instance/account loads for
@@ -531,7 +581,10 @@ ipcMain.handle('settings:get', () => ({ ...DEFAULT_SETTINGS, ...settingsStore.re
 ipcMain.handle('settings:set', (_e, patch) => {
   const safePatch = { ...patch };
   if (VARIANT === 'public') delete safePatch.adminUnlocked; // public build: no path to admin, ever - not even by editing settings directly
-  return settingsStore.patch(safePatch);
+  const updated = settingsStore.patch(safePatch);
+  if ('launchOnStartup' in safePatch) applyLaunchOnStartup(updated);
+  if (ingame.IN_GAME_KEYS.some((k) => k in safePatch)) ingame.writeConfig(app.getPath('userData'), { ...DEFAULT_SETTINGS, ...updated });
+  return updated;
 });
 
 // ---------------------------------------------------------------------------
