@@ -19,6 +19,31 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Versions I could verify are real as of my own knowledge. Extending
+          # this upward to whatever's newest needs the exact Yarn mappings
+          # build number and a matching Fabric API version, which I can't
+          # currently verify without web access - see the project notes for
+          # how to add a row here.
+          - minecraft_version: '1.20.1'
+            yarn_mappings: '1.20.1+build.10'
+            loader_version: '0.16.5'
+            fabric_version: '0.92.0+1.20.1'
+          - minecraft_version: '1.20.4'
+            yarn_mappings: '1.20.4+build.3'
+            loader_version: '0.16.5'
+            fabric_version: '0.97.2+1.20.4'
+          - minecraft_version: '1.21'
+            yarn_mappings: '1.21+build.9'
+            loader_version: '0.16.5'
+            fabric_version: '0.100.1+1.21'
+          - minecraft_version: '1.21.1'
+            yarn_mappings: '1.21.1+build.3'
+            loader_version: '0.16.5'
+            fabric_version: '0.102.0+1.21.1'
     steps:
       - uses: actions/checkout@v4
 
@@ -31,12 +56,17 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build mod
+      - name: Build mod for MC ${{ matrix.minecraft_version }}
         working-directory: mod
-        run: gradle build --no-daemon --stacktrace
+        run: >
+          gradle build --no-daemon --stacktrace
+          -Pminecraft_version=${{ matrix.minecraft_version }}
+          -Pyarn_mappings=${{ matrix.yarn_mappings }}
+          -Ploader_version=${{ matrix.loader_version }}
+          -Pfabric_version=${{ matrix.fabric_version }}
 
       - name: Upload jar as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nyx-companion-jar
+          name: nyx-companion-${{ matrix.minecraft_version }}
           path: mod/build/libs/*.jar

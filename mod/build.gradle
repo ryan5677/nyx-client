@@ -7,7 +7,9 @@ version = project.mod_version
 group = project.maven_group
 
 base {
-	archivesName = project.archives_base_name
+	// Distinct filename per Minecraft version, e.g. nyx-companion-1.21.1.jar -
+	// the launcher picks the matching jar for each instance's MC version.
+	archivesName = "${project.archives_base_name}-${project.minecraft_version}"
 }
 
 repositories {
