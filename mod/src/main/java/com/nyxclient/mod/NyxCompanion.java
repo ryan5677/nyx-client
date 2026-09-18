@@ -3,7 +3,6 @@ package com.nyxclient.mod;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.text.Text;
 
@@ -38,10 +37,13 @@ public class NyxCompanion implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		HudRenderCallback.EVENT.register((DrawContext context, Object tickDelta) -> render(context));
+		// Let the lambda infer its parameter types - Fabric's HudRenderCallback
+		// signature changes between Minecraft versions, so naming the types
+		// explicitly here would break the build on every bump.
+		HudRenderCallback.EVENT.register((context, tickDelta) -> render(context));
 	}
 
-	private void render(DrawContext context) {
+	private void render(net.minecraft.client.gui.DrawContext context) {
 		MinecraftClient client = MinecraftClient.getInstance();
 		if (client == null || client.player == null) return;
 		if (client.options.hudHidden) return;

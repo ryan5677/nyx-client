@@ -4,13 +4,16 @@
   "version": "${version}",
   "name": "Nyx Companion",
   "description": "In-game HUD and menu options for Nyx Client. Reads its settings from the launcher's config file.",
-  "authors": ["Nyx Client Project"],
+  "authors": [
+    "Nyx Client Project"
+  ],
   "license": "MIT",
   "environment": "client",
   "entrypoints": {
-    "client": ["com.nyxclient.mod.NyxCompanion"]
+    "client": [
+      "com.nyxclient.mod.NyxCompanion"
+    ]
   },
-  "mixins": ["nyx-companion.mixins.json"],
   "depends": {
     "fabricloader": ">=0.15.0",
     "fabric-api": "*",

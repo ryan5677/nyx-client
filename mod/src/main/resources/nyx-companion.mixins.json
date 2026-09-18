@@ -1,7 +1,0 @@
-{
-  "required": true,
-  "package": "com.nyxclient.mod.mixin",
-  "compatibilityLevel": "JAVA_21",
-  "client": ["HeldItemRendererMixin"],
-  "injectors": { "defaultRequire": 1 }
-}
