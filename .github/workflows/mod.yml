@@ -55,6 +55,13 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          # fabric-loom 1.7.x uses a Gradle Problems-reporting API that only
+          # exists in newer Gradle releases. Without a project-local Gradle
+          # wrapper, the runner's default pre-installed Gradle was too old
+          # for it (NoSuchMethodError: Problems.forNamespace) - pinning an
+          # explicit version here is the fix.
+          gradle-version: '8.10'
 
       - name: Build mod for MC ${{ matrix.minecraft_version }}
         working-directory: mod
