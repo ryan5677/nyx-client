@@ -13,10 +13,16 @@ base {
 // Gradle's default output name is "<archivesName>-<version>.jar", which
 // would bake the mod's own version number into the filename and break the
 // predictable download URL the launcher builds from just the Minecraft
-// version (nyx-companion-<mcVersion>.jar). Setting this directly bypasses
-// that composition instead of post-processing filenames in CI.
+// version (nyx-companion-<mcVersion>.jar). Loom produces the actual
+// published jar via remapJar, not the plain jar task, so both need the
+// override - setting only `jar` silently gets ignored by remapJar's own
+// naming.
+def jarName = "nyx-companion-${project.minecraft_version}.jar"
 tasks.named('jar') {
-	archiveFileName = "nyx-companion-${project.minecraft_version}.jar"
+	archiveFileName = jarName
+}
+tasks.named('remapJar') {
+	archiveFileName = jarName
 }
 
 repositories {
