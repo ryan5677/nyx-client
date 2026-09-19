@@ -19,6 +19,7 @@ const mcping = require('./lib/mcping');
 const lan = require('./lib/lan');
 const updater = require('./lib/updater');
 const ingame = require('./lib/ingame');
+const sync = require('./lib/sync');
 const { VARIANT } = require('./lib/variant');
 const { DEFAULT_BACKEND_URL } = require('./lib/config');
 
@@ -730,6 +731,21 @@ ipcMain.handle('instances:restore', async () => {
   zip.extractAllTo(root, true);
   fs.rmSync(path.join(root, '.nyx-instance.json'), { force: true }); // not a real Minecraft file - drop it from the live instance
   return { canceled: false, instance: instances.get(inst.id) };
+});
+
+ipcMain.handle('instances:sync', (_e, { sourceId, targetIds, mods, resourcePacks, options }) => {
+  const sourceRoot = instances.rootDir(sourceId);
+  const results = [];
+  for (const targetId of targetIds || []) {
+    if (targetId === sourceId) continue;
+    try {
+      const done = sync.syncInstance(sourceRoot, instances.rootDir(targetId), { mods, resourcePacks, options });
+      results.push({ targetId, ok: true, done });
+    } catch (err) {
+      results.push({ targetId, ok: false, error: err.message });
+    }
+  }
+  return results;
 });
 
 // ---------------------------------------------------------------------------

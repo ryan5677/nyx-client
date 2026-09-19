@@ -1374,6 +1374,58 @@ anvil.updater.onStatus((status) => {
 $('#btn-check-updates')?.addEventListener('click', () => anvil.updater.check());
 $('#btn-restart-update')?.addEventListener('click', () => anvil.updater.install());
 
+// ----------------------------------------------------------- Instance sync
+function openSyncModal() {
+  if (state.instances.length < 2) {
+    toast('Need at least two instances to sync between', true);
+    return;
+  }
+  const sourceSel = $('#sync-source-select');
+  sourceSel.innerHTML = state.instances.map((i) => `<option value="${i.id}" ${i.id === state.selectedId ? 'selected' : ''}>${escapeHtml(i.name)}</option>`).join('');
+  renderSyncTargetList();
+  sourceSel.onchange = renderSyncTargetList;
+  $('#sync-modal-backdrop').hidden = false;
+}
+function renderSyncTargetList() {
+  const sourceId = $('#sync-source-select').value;
+  const wrap = $('#sync-target-list');
+  wrap.innerHTML = state.instances
+    .filter((i) => i.id !== sourceId)
+    .map((i) => `
+      <label class="checkbox" style="padding: 4px 0;">
+        <input type="checkbox" class="sync-target-check" value="${i.id}" />
+        ${escapeHtml(i.name)}
+      </label>
+    `).join('') || '<p class="muted small">No other instances to sync to.</p>';
+}
+$('#btn-open-sync')?.addEventListener('click', openSyncModal);
+$('#btn-sync-cancel')?.addEventListener('click', () => { $('#sync-modal-backdrop').hidden = true; });
+$('#btn-sync-run')?.addEventListener('click', async () => {
+  const sourceId = $('#sync-source-select').value;
+  const targetIds = $$('.sync-target-check').filter((c) => c.checked).map((c) => c.value);
+  if (!targetIds.length) { toast('Pick at least one target instance', true); return; }
+  const what = {
+    mods: $('#sync-check-mods').checked,
+    resourcePacks: $('#sync-check-resourcepacks').checked,
+    options: $('#sync-check-options').checked,
+  };
+  const btn = $('#btn-sync-run');
+  const prevLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Syncing…';
+  try {
+    const results = await anvil.instances.sync(sourceId, targetIds, what);
+    const failed = results.filter((r) => !r.ok);
+    $('#sync-modal-backdrop').hidden = true;
+    toast(failed.length ? `Synced with ${failed.length} error(s) - check the target instances` : `Synced to ${targetIds.length} instance${targetIds.length > 1 ? 's' : ''}`, !!failed.length);
+  } catch (err) {
+    toast(err.message || String(err), true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = prevLabel;
+  }
+});
+
 // --------------------------------------------------------------- In-Game
 /** Reflects the saved in-game options into the In-Game tab's controls. */
 function renderInGameUI() {

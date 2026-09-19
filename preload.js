@@ -35,6 +35,7 @@ contextBridge.exposeInMainWorld('anvil', {
     remove: invoke('instances:remove'),
     backup: invoke('instances:backup'),
     restore: invoke('instances:restore'),
+    sync: (sourceId, targetIds, what) => ipcRenderer.invoke('instances:sync', { sourceId, targetIds, ...what }),
   },
   mods: {
     list: invoke('mods:list'),
