@@ -77,3 +77,44 @@ jobs:
         with:
           name: nyx-companion-${{ matrix.minecraft_version }}
           path: mod/build/libs/*.jar
+
+  # A single rolling release, separate from the app's own versioned
+  # releases - mod jars and app versions change on different schedules, so
+  # tying them together would mean the launcher needing to know which app
+  # tag has the mod jars attached, which changes every release. This gives
+  # one fixed, predictable download URL per Minecraft version instead:
+  # github.com/<repo>/releases/download/mod-latest/nyx-companion-<mc>.jar
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all built jars
+        uses: actions/download-artifact@v4
+        with:
+          pattern: nyx-companion-*
+          path: jars
+          merge-multiple: true
+
+      - name: Flatten jar names (strip the -sources/-dev suffixes Loom adds)
+        run: |
+          mkdir -p out
+          for f in jars/*.jar; do
+            base=$(basename "$f")
+            case "$base" in
+              *-sources.jar|*-dev.jar) continue ;;
+            esac
+            cp "$f" "out/$base"
+          done
+          ls -la out
+
+      - name: Publish to the mod-latest release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete mod-latest --yes --cleanup-tag || true
+          gh release create mod-latest out/*.jar \
+            --title "Nyx Companion mod (latest)" \
+            --notes "Auto-published by CI from the mod/ source on every push to main. Not a versioned release - always the newest successful build per Minecraft version." \
+            --prerelease

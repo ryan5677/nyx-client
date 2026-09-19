@@ -7,9 +7,16 @@ version = project.mod_version
 group = project.maven_group
 
 base {
-	// Distinct filename per Minecraft version, e.g. nyx-companion-1.21.1.jar -
-	// the launcher picks the matching jar for each instance's MC version.
 	archivesName = "${project.archives_base_name}-${project.minecraft_version}"
+}
+
+// Gradle's default output name is "<archivesName>-<version>.jar", which
+// would bake the mod's own version number into the filename and break the
+// predictable download URL the launcher builds from just the Minecraft
+// version (nyx-companion-<mcVersion>.jar). Setting this directly bypasses
+// that composition instead of post-processing filenames in CI.
+tasks.named('jar') {
+	archiveFileName = "nyx-companion-${project.minecraft_version}.jar"
 }
 
 repositories {
