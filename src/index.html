@@ -265,12 +265,21 @@
         </div>
 
         <div class="panel" id="ingame-mod-notice">
-          <h3>Requires the Nyx companion mod</h3>
+          <h3>Nyx Companion mod</h3>
           <p class="muted small">
-            The launcher can't change anything inside Minecraft's own rendering on its own - menus, HUD and in-game
-            colours are drawn by the game, so they need a mod running alongside it. These settings are saved and
-            written to a config file now, and take effect once the Nyx Fabric mod is installed in an instance.
-            The mod is still in development, so nothing here will change your game yet.
+            The launcher can't change anything inside Minecraft's own rendering on its own - the HUD is drawn by
+            the game, so it needs a small mod running alongside it. When you launch a supported Fabric instance
+            with any option below turned on, that mod is installed automatically - nothing to do by hand.
+          </p>
+          <p class="muted small" id="ingame-mod-status" style="margin-top: 8px;">Select an instance on the Play tab to check.</p>
+        </div>
+
+        <div class="panel">
+          <h3>HUD position</h3>
+          <p class="muted small">
+            Position the FPS/coordinates/CPS block by dragging it in-game: bind a key to "Toggle Nyx HUD edit
+            mode" in Minecraft's Controls menu, press it to unlock dragging, drag the block where you want it,
+            then press it again to lock it back in place.
           </p>
         </div>
 
@@ -294,15 +303,6 @@
           <div class="field-row inline" style="margin-top: 10px;">
             <div class="toggle" id="ingame-fps-toggle"></div>
             <label>Show FPS counter</label>
-          </div>
-          <div class="field-row" style="margin-top: 12px;">
-            <label>FPS counter position</label>
-            <div class="segmented" id="ingame-fps-position">
-              <button class="segmented-btn active" data-pos="top-left">Top left</button>
-              <button class="segmented-btn" data-pos="top-right">Top right</button>
-              <button class="segmented-btn" data-pos="bottom-left">Bottom left</button>
-              <button class="segmented-btn" data-pos="bottom-right">Bottom right</button>
-            </div>
           </div>
           <div class="field-row inline" style="margin-top: 14px;">
             <div class="toggle" id="ingame-coords-toggle"></div>

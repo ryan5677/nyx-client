@@ -9,6 +9,9 @@ contextBridge.exposeInMainWorld('anvil', {
     variant: invoke('app:variant'),
     openSkinEditor: invoke('app:openSkinEditor'),
   },
+  companionMod: {
+    status: (instanceId) => ipcRenderer.invoke('companionMod:status', instanceId),
+  },
   updater: {
     check: invoke('updater:check'),
     install: invoke('updater:install'),

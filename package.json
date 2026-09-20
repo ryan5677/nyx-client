@@ -1,7 +1,7 @@
 {
   "name": "nyx-client",
   "productName": "Nyx Client",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Nyx Client",
   "main": "main.js",
   "author": "Nyx Client Project",

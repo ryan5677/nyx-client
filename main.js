@@ -20,6 +20,7 @@ const lan = require('./lib/lan');
 const updater = require('./lib/updater');
 const ingame = require('./lib/ingame');
 const sync = require('./lib/sync');
+const companionMod = require('./lib/companionmod');
 const { VARIANT } = require('./lib/variant');
 const { DEFAULT_BACKEND_URL } = require('./lib/config');
 
@@ -63,7 +64,6 @@ const DEFAULT_SETTINGS = {
   // anything until that mod is installed in the instance.
   inGameAccentColor: '#8b5cf6',
   inGameFpsCounter: false,
-  inGameFpsPosition: 'top-left', // 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
   inGameCoords: false,
   inGameCustomMenuTheme: true,
   inGameHideHandsInF1: false,
@@ -438,6 +438,16 @@ ipcMain.handle('auth:faceIcon', async (_e, uuid) => {
 
 ipcMain.handle('app:variant', () => VARIANT);
 ipcMain.handle('app:openSkinEditor', () => openSkinEditorWindow());
+ipcMain.handle('companionMod:status', (_e, instanceId) => {
+  const inst = instances.get(instanceId);
+  if (!inst) return { supported: false };
+  return {
+    supported: companionMod.isSupported(inst.mcVersion, inst.loader),
+    mcVersion: inst.mcVersion,
+    loader: inst.loader,
+    supportedVersions: companionMod.SUPPORTED_VERSIONS,
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Auto-update (electron-updater, GitHub Releases)
@@ -851,6 +861,16 @@ ipcMain.handle('launch:start', async (_e, instanceId, joinServer = null) => {
 
   const settings = { ...DEFAULT_SETTINGS, ...settingsStore.read() };
   const root = instances.rootDir(instanceId);
+
+  const companionResult = await companionMod.ensureInInstance(app.getPath('userData'), root, inst.mcVersion, inst.loader, settings);
+  if (companionResult.installed) {
+    console.log(`Nyx Companion mod installed for this launch (MC ${inst.mcVersion})`);
+  } else if (companionResult.reason === 'error') {
+    // Non-fatal - the in-game HUD options just won't do anything this
+    // session, everything else about the launch proceeds normally.
+    console.error('Nyx Companion mod install failed, continuing without it:', companionResult.error);
+  }
+
   const emitter = launcher.launch(inst, root, account, settings, joinServer);
   instances.markPlayed(instanceId);
 

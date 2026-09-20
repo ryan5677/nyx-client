@@ -1438,7 +1438,27 @@ function renderInGameUI() {
   const accent = s.inGameAccentColor || '#8b5cf6';
   if ($('#ingame-accent-color')) $('#ingame-accent-color').value = accent;
   if ($('#ingame-accent-hex')) $('#ingame-accent-hex').value = accent;
-  $$('#ingame-fps-position .segmented-btn').forEach((b) => b.classList.toggle('active', b.dataset.pos === (s.inGameFpsPosition || 'top-left')));
+  refreshCompanionModStatus();
+}
+
+/** Checks whether the companion mod will actually install for the instance currently selected on the Play tab, and says so plainly instead of leaving people guessing. */
+async function refreshCompanionModStatus() {
+  const el = $('#ingame-mod-status');
+  if (!el) return;
+  const inst = selectedInstance();
+  if (!inst) { el.textContent = 'Select an instance on the Play tab to check.'; return; }
+  try {
+    const status = await anvil.companionMod.status(inst.id);
+    if (status.supported) {
+      el.textContent = `${inst.name} (Fabric ${status.mcVersion}) is supported - the mod installs automatically next time you launch it, if anything above is turned on.`;
+    } else if (status.loader !== 'fabric') {
+      el.textContent = `${inst.name} uses ${status.loader}, not Fabric - the companion mod is Fabric-only for now.`;
+    } else {
+      el.textContent = `${inst.name} is on Minecraft ${status.mcVersion}, which isn't supported yet. Supported: ${status.supportedVersions.join(', ')}.`;
+    }
+  } catch {
+    el.textContent = 'Could not check mod support for this instance.';
+  }
 }
 
 function bindInGameToggle(id, key, invertDefault = false) {
@@ -1464,10 +1484,6 @@ $('#ingame-accent-hex')?.addEventListener('change', (e) => {
   if (/^#[0-9a-fA-F]{6}$/.test(v)) saveSettings({ inGameAccentColor: v });
   renderInGameUI();
 });
-$$('#ingame-fps-position .segmented-btn').forEach((btn) => btn.addEventListener('click', () => {
-  saveSettings({ inGameFpsPosition: btn.dataset.pos });
-  renderInGameUI();
-}));
 
 // --------------------------------------------------------------- Startup
 $('#launch-startup-toggle')?.addEventListener('click', () => {
