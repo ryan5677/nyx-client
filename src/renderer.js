@@ -1364,7 +1364,7 @@ anvil.updater.onStatus((status) => {
       }
       break;
     case 'error':
-      setUpdateStatusText('Couldn\u2019t check for updates.');
+      setUpdateStatusText(status.message || 'Couldn\u2019t check for updates.');
       break;
     default:
       break;
