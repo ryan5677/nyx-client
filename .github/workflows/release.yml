@@ -7,16 +7,42 @@ name: Release
 # push. No local build, no manual file uploads, no personal access token to
 # manage - GITHUB_TOKEN below is provided automatically by GitHub Actions
 # for every run, scoped to just this repo.
+#
+# A push to main also releases, but only when package.json carries a version
+# that has no tag yet - so bumping the version and pushing to main is enough
+# (GitHub creates the tag when the release is published). Other pushes to
+# main skip the build.
 on:
   push:
     tags:
       - 'v*.*.*'
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      needed: ${{ steps.v.outputs.needed }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: |
+          ver=$(node -p "require('./package.json').version")
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          elif git ls-remote --exit-code --tags origin "refs/tags/v${ver}" >/dev/null 2>&1; then
+            echo "v${ver} already released - nothing to build"
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
   build-and-publish:
+    needs: check
+    if: needs.check.outputs.needed == 'true'
     runs-on: windows-latest
     steps:
       - name: Check out repo
