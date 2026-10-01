@@ -1430,11 +1430,8 @@ $('#btn-sync-run')?.addEventListener('click', async () => {
 /** Reflects the saved in-game options into the In-Game tab's controls. */
 function renderInGameUI() {
   const s = state.settings;
-  $('#ingame-menu-theme-toggle')?.classList.toggle('on', s.inGameCustomMenuTheme !== false);
-  $('#ingame-fps-toggle')?.classList.toggle('on', !!s.inGameFpsCounter);
-  $('#ingame-coords-toggle')?.classList.toggle('on', !!s.inGameCoords);
-  $('#ingame-cps-toggle')?.classList.toggle('on', !!s.inGameCpsCounter);
-  $('#ingame-hidehands-toggle')?.classList.toggle('on', !!s.inGameHideHandsInF1);
+  $('#ingame-menu-toggle')?.classList.toggle('on', s.inGameCustomMenu !== false);
+  $('#ingame-settings-toggle')?.classList.toggle('on', s.inGameCustomSettings !== false);
   const accent = s.inGameAccentColor || '#8b5cf6';
   if ($('#ingame-accent-color')) $('#ingame-accent-color').value = accent;
   if ($('#ingame-accent-hex')) $('#ingame-accent-hex').value = accent;
@@ -1450,7 +1447,7 @@ async function refreshCompanionModStatus() {
   try {
     const status = await anvil.companionMod.status(inst.id);
     if (status.supported) {
-      el.textContent = `${inst.name} (Fabric ${status.mcVersion}) is supported - the mod installs automatically next time you launch it, if anything above is turned on.`;
+      el.textContent = `${inst.name} (Fabric ${status.mcVersion}) is supported - the mod installs automatically next time you launch it, if a menu option above is turned on.`;
     } else if (status.loader !== 'fabric') {
       el.textContent = `${inst.name} uses ${status.loader}, not Fabric - the companion mod is Fabric-only for now.`;
     } else {
@@ -1468,11 +1465,8 @@ function bindInGameToggle(id, key, invertDefault = false) {
     renderInGameUI();
   });
 }
-bindInGameToggle('ingame-menu-theme-toggle', 'inGameCustomMenuTheme', true);
-bindInGameToggle('ingame-fps-toggle', 'inGameFpsCounter');
-bindInGameToggle('ingame-coords-toggle', 'inGameCoords');
-bindInGameToggle('ingame-cps-toggle', 'inGameCpsCounter');
-bindInGameToggle('ingame-hidehands-toggle', 'inGameHideHandsInF1');
+bindInGameToggle('ingame-menu-toggle', 'inGameCustomMenu', true);
+bindInGameToggle('ingame-settings-toggle', 'inGameCustomSettings', true);
 
 $('#ingame-accent-color')?.addEventListener('input', (e) => {
   saveSettings({ inGameAccentColor: e.target.value });

@@ -267,27 +267,22 @@
         <div class="panel" id="ingame-mod-notice">
           <h3>Nyx Companion mod</h3>
           <p class="muted small">
-            The launcher can't change anything inside Minecraft's own rendering on its own - the HUD is drawn by
-            the game, so it needs a small mod running alongside it. When you launch a supported Fabric instance
-            with any option below turned on, that mod is installed automatically - nothing to do by hand.
+            Menus inside Minecraft are drawn by the game itself, so they need a small mod running alongside it.
+            When you launch a supported Fabric instance with a menu option below turned on, that mod is installed
+            automatically - nothing to do by hand.
           </p>
           <p class="muted small" id="ingame-mod-status" style="margin-top: 8px;">Select an instance on the Play tab to check.</p>
         </div>
 
         <div class="panel">
-          <h3>HUD position</h3>
-          <p class="muted small">
-            Position the FPS/coordinates/CPS block by dragging it in-game: bind a key to "Toggle Nyx HUD edit
-            mode" in Minecraft's Controls menu, press it to unlock dragging, drag the block where you want it,
-            then press it again to lock it back in place.
-          </p>
-        </div>
-
-        <div class="panel">
-          <h3>Menu theme</h3>
+          <h3>Menus</h3>
           <div class="field-row inline" style="margin-top: 10px;">
-            <div class="toggle" id="ingame-menu-theme-toggle"></div>
-            <label>Apply Nyx theme to in-game menus</label>
+            <div class="toggle" id="ingame-menu-toggle"></div>
+            <label>Nyx main menu and buttons (title screen, pause menu, all vanilla screens)</label>
+          </div>
+          <div class="field-row inline" style="margin-top: 14px;">
+            <div class="toggle" id="ingame-settings-toggle"></div>
+            <label>Nyx settings menu (Sodium-style video &amp; performance options)</label>
           </div>
           <div class="field-row" style="margin-top: 14px;">
             <label>In-game accent color</label>
@@ -295,26 +290,6 @@
               <input type="color" class="swatch-custom" id="ingame-accent-color" value="#8b5cf6" />
               <input type="text" id="ingame-accent-hex" class="input input-small" maxlength="7" placeholder="#8b5cf6" />
             </div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h3>HUD</h3>
-          <div class="field-row inline" style="margin-top: 10px;">
-            <div class="toggle" id="ingame-fps-toggle"></div>
-            <label>Show FPS counter</label>
-          </div>
-          <div class="field-row inline" style="margin-top: 14px;">
-            <div class="toggle" id="ingame-coords-toggle"></div>
-            <label>Show coordinates</label>
-          </div>
-          <div class="field-row inline">
-            <div class="toggle" id="ingame-cps-toggle"></div>
-            <label>Show CPS counter</label>
-          </div>
-          <div class="field-row inline">
-            <div class="toggle" id="ingame-hidehands-toggle"></div>
-            <label>Hide hands when HUD is hidden (F1)</label>
           </div>
         </div>
       </section>

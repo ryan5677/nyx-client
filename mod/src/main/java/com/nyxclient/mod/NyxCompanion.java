@@ -1,50 +1,53 @@
 package com.nyxclient.mod;
 
-import com.nyxclient.mod.hud.NyxHudManager;
-import com.nyxclient.mod.hud.StatsHudElement;
+import com.nyxclient.mod.ui.NyxButtonStyler;
+import com.nyxclient.mod.ui.NyxSettingsScreen;
+import com.nyxclient.mod.ui.NyxTitleScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.gui.screen.option.OptionsScreen;
 
 /**
- * Entry point. Registers the built-in HUD elements with NyxHudManager (the
- * small "rendering engine" everything else here goes through - see the hud
- * package) and wires up the edit-mode keybind plus the per-tick/per-frame
- * hooks it needs. Adding a new HUD element later means implementing
- * NyxHudElement and adding one register() call here - dragging,
- * hit-testing, and position persistence all come from the manager for
- * free.
+ * Nyx Companion: swaps in Nyx-styled menus. No mixins - screens are replaced
+ * from a tick hook, and button restyling is a paint-over after render (see
+ * NyxButtonStyler), so there is very little here that can break between
+ * Minecraft versions.
+ *
+ * Each feature can be switched off from the launcher (customMenu /
+ * customSettings in nyx-ingame-config.json). With no launcher config at all,
+ * everything defaults to on.
  */
 public class NyxCompanion implements ClientModInitializer {
-	private static KeyBinding editModeKey;
+	/** The screen that was open on the previous tick - becomes the parent of a replaced screen. */
+	private Screen previous = null;
 
 	@Override
 	public void onInitializeClient() {
-		NyxHudManager.register(new StatsHudElement());
-
-		editModeKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"key.nyx-companion.edit_hud",
-				InputUtil.Type.KEYSYM,
-				GLFW.GLFW_KEY_UNKNOWN, // unbound by default - the player picks a key in Controls
-				"category.nyx-companion"
-		));
+		NyxButtonStyler.register();
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
-			if (editModeKey.wasPressed()) NyxHudManager.toggleEditMode();
-			NyxHudManager.tick(client);
-		});
+			Screen current = client.currentScreen;
 
-		// Let the lambda infer its parameter types - Fabric's HudRenderCallback
-		// signature changes between Minecraft versions, so naming the types
-		// explicitly here would break the build on every bump.
-		HudRenderCallback.EVENT.register((context, tickDelta) -> {
-			MinecraftClient client = MinecraftClient.getInstance();
-			if (client != null) NyxHudManager.renderAll(context, client);
+			if (current != previous) {
+				if (current != null && NyxConfig.getBool("customMenu", true)
+						&& current.getClass() == TitleScreen.class) {
+					client.setScreen(new NyxTitleScreen());
+					current = client.currentScreen;
+				} else if (current != null && NyxConfig.getBool("customSettings", true)
+						&& current.getClass() == OptionsScreen.class) {
+					if (NyxSettingsScreen.allowVanilla) {
+						// The player asked for the vanilla menu from ours - let it open once.
+					} else {
+						client.setScreen(new NyxSettingsScreen(previous));
+						current = client.currentScreen;
+					}
+				}
+				if (!(current instanceof OptionsScreen)) NyxSettingsScreen.allowVanilla = false;
+			}
+			previous = current;
 		});
 	}
 }

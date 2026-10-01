@@ -36,19 +36,29 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 }
 
+// Minecraft 1.20.x runs on Java 17 and only 1.20.5+ needs Java 21. A jar
+// compiled for 21 simply fails to load on a 17 game (and Fabric would refuse
+// it via the java requirement), so each jar is compiled for the Java level of
+// the Minecraft version it targets.
+def javaLevel = project.minecraft_version.startsWith('1.20') ? 17 : 21
+// "~1.20.4" style range so the jar only claims the exact version it was built for.
+def mcRange = "~${project.minecraft_version}"
+
 processResources {
 	inputs.property "version", project.version
+	inputs.property "mc_range", mcRange
+	inputs.property "java_version", javaLevel.toString()
 	filesMatching("fabric.mod.json") {
-		expand "version": project.version
+		expand "version": project.version, "mc_range": mcRange, "java_version": javaLevel.toString()
 	}
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = javaLevel
 }
 
 java {
 	withSourcesJar()
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.toVersion(javaLevel)
+	targetCompatibility = JavaVersion.toVersion(javaLevel)
 }

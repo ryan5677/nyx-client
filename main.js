@@ -63,11 +63,8 @@ const DEFAULT_SETTINGS = {
   // change anything inside Minecraft's own rendering, so none of these do
   // anything until that mod is installed in the instance.
   inGameAccentColor: '#8b5cf6',
-  inGameFpsCounter: false,
-  inGameCoords: false,
-  inGameCustomMenuTheme: true,
-  inGameHideHandsInF1: false,
-  inGameCpsCounter: false,
+  inGameCustomMenu: true,
+  inGameCustomSettings: true,
 };
 
 /**
