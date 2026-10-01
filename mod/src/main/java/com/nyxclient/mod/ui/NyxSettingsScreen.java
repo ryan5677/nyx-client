@@ -88,7 +88,7 @@ public class NyxSettingsScreen extends Screen {
 		general.options.add(toggle("Fullscreen", "Run the game fullscreen. You can also toggle this with F11.", o.getFullscreen()));
 		general.options.add(toggle("VSync", "Lock the frame rate to your monitor's refresh rate to prevent tearing.", o.getEnableVsync()));
 		general.options.add(slider("Max Frame Rate", "Upper frame-rate limit. The top of the slider means unlimited.", o.getMaxFps(), 10, 260, " fps"));
-		general.options.add(toggle("View Bobbing", "Sway the view while you walk.", o.getViewBobbing()));
+		general.options.add(toggle("View Bobbing", "Sway the view while you walk.", o.getBobView()));
 		general.options.add(slider("GUI Scale", "Size of the interface. 0 picks automatically.", o.getGuiScale(), 0, 4, ""));
 		tabs.add(general);
 
