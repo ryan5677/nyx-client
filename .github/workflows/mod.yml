@@ -65,12 +65,22 @@ jobs:
 
       - name: Build mod for MC ${{ matrix.minecraft_version }}
         working-directory: mod
-        run: >
-          gradle build --no-daemon --stacktrace
-          -Pminecraft_version=${{ matrix.minecraft_version }}
-          -Pyarn_mappings=${{ matrix.yarn_mappings }}
-          -Ploader_version=${{ matrix.loader_version }}
-          -Pfabric_version=${{ matrix.fabric_version }}
+        shell: bash
+        run: |
+          set +e
+          gradle build --no-daemon --stacktrace \
+            -Pminecraft_version=${{ matrix.minecraft_version }} \
+            -Pyarn_mappings=${{ matrix.yarn_mappings }} \
+            -Ploader_version=${{ matrix.loader_version }} \
+            -Pfabric_version=${{ matrix.fabric_version }} 2>&1 | tee build.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            # The raw Actions log isn't readable without signing in, so surface
+            # the compiler's own error lines as annotations anyone can see.
+            msg=$(grep -E "error:|\.java:[0-9]+|What went wrong|Could not|not found|cannot find" -A2 build.log | head -40 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=Mod build failed::${msg:0:3500}"
+          fi
+          exit $status
 
       - name: Upload jar as artifact
         uses: actions/upload-artifact@v4
