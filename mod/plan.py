@@ -73,7 +73,7 @@ def main():
                          loom=yarn_loom, gradle="8.14", java=21, dir="mod"))
 
     if include_mojang:
-        mojang_loom = newest_loom(99)
+        mojang_loom = newest_loom(15)  # newer Loom needs a newer Gradle than the 26.1 guide pins
         for mc in MOJANG_CANDIDATES:
             api = newest_api(mc)
             if not api:
