@@ -6,7 +6,6 @@ import net.minecraft.client.Options;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -75,7 +74,7 @@ public class NyxSettingsScreen extends NyxScreenBase {
 				.bounds(cx + 6, by, 100, 20).build());
 		this.addRenderableWidget(Button.builder(Component.literal("Vanilla Options"), b -> {
 			allowVanilla = true;
-			NyxNav.open(this.minecraft, new OptionsScreen(this, this.minecraft.options));
+			NyxNav.open(this.minecraft, NyxNav.vanillaOptions(this.minecraft, this));
 		}).bounds(cx - 106, by, 100, 20).build());
 	}
 
@@ -334,8 +333,8 @@ public class NyxSettingsScreen extends NyxScreenBase {
 		Minecraft mc = this.minecraft != null ? this.minecraft : Minecraft.getInstance();
 		mc.options.save();
 		try {
-			if (mc.level != null && mc.levelRenderer != null) mc.levelRenderer.allChanged();
-			mc.resizeDisplay();
+			NyxNav.refreshVideo(mc);
+			
 		} catch (Exception ignored) {
 			// A failed visual refresh shouldn't cost the player their saved settings.
 		}

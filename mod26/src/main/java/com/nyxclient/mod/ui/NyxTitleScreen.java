@@ -1,6 +1,5 @@
 package com.nyxclient.mod.ui;
 
-import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -55,7 +54,7 @@ public class NyxTitleScreen extends Screen {
 
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
-		float time = (Util.getMillis() % 600000L) / 1000f;
+		float time = (System.currentTimeMillis() % 600000L) / 1000f;
 
 		NyxTheme.gradient(g, 0, 0, this.width, this.height, NyxTheme.BG_TOP, NyxTheme.BG_BOTTOM);
 
