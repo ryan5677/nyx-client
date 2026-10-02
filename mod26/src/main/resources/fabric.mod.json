@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "nyx-companion",
+  "version": "${version}",
+  "name": "Nyx Companion",
+  "description": "Nyx-themed menus and settings screen for Nyx Client.",
+  "authors": [
+    "Nyx Client Project"
+  ],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.nyxclient.mod.NyxCompanion"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "fabric-api": "*",
+    "minecraft": "${mc_range}",
+    "java": ">=25"
+  }
+}

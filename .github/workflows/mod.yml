@@ -67,7 +67,7 @@ jobs:
           if [ "$status" -ne 0 ]; then
             # The raw Actions log isn't readable without signing in, so surface
             # the compiler's own error lines as annotations anyone can see.
-            msg=$(grep -E "error:|\.java:[0-9]+|What went wrong|Could not|not found|cannot find|Unsupported|requires" -A2 build.log | head -40 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            msg=$(grep -E "error:|symbol:|What went wrong|Could not|not found|Unsupported|requires" build.log | sed 's#.*/com/nyxclient/mod/##; s/%/%25/g' | awk '!seen[$0]++' | head -70 | awk '{printf "%s%%0A", $0}')
             echo "::error title=Mod build failed (MC ${{ matrix.mc }})::${msg:0:3500}"
           fi
           exit $status
