@@ -68,20 +68,51 @@ public class NyxTitleScreen extends Screen {
 		drawShootingStar(ctx, time);
 		drawMoon(ctx);
 
-		// Title
-		ctx.getMatrices().push();
-		float scale = 3f;
-		ctx.getMatrices().translate(this.width / 2f, this.height / 2f - 82f, 0f);
-		ctx.getMatrices().scale(scale, scale, 1f);
-		String title = "NYX CLIENT";
-		int tw = this.textRenderer.getWidth(title);
-		ctx.drawText(this.textRenderer, title, -tw / 2, 0, NyxTheme.accent(), true);
-		ctx.getMatrices().pop();
+		// Title, drawn as scaled pixel blocks: matrix transforms changed type between
+		// Minecraft versions (3D stack before 1.21.6, 2D after), plain fills never did.
+		drawPixelTitle(ctx, "NYX CLIENT", this.width / 2, this.height / 2 - 96, 4);
 
 		ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Minecraft, after dark"),
 				this.width / 2, this.height / 2 - 52, NyxTheme.TEXT_DIM);
 
 		super.render(ctx, mouseX, mouseY, delta);
+	}
+
+	// 5x7 bitmaps for the letters in the title.
+	private static final java.util.Map<Character, String[]> FONT = new java.util.HashMap<>();
+	static {
+		FONT.put('N', new String[]{"10001", "11001", "10101", "10101", "10011", "10001", "10001"});
+		FONT.put('Y', new String[]{"10001", "10001", "01010", "00100", "00100", "00100", "00100"});
+		FONT.put('X', new String[]{"10001", "01010", "01010", "00100", "01010", "01010", "10001"});
+		FONT.put('C', new String[]{"01111", "10000", "10000", "10000", "10000", "10000", "01111"});
+		FONT.put('L', new String[]{"10000", "10000", "10000", "10000", "10000", "10000", "11111"});
+		FONT.put('I', new String[]{"11111", "00100", "00100", "00100", "00100", "00100", "11111"});
+		FONT.put('E', new String[]{"11111", "10000", "10000", "11110", "10000", "10000", "11111"});
+		FONT.put('T', new String[]{"11111", "00100", "00100", "00100", "00100", "00100", "00100"});
+	}
+
+	private void drawPixelTitle(DrawContext ctx, String text, int centerX, int top, int px) {
+		int letterW = 5 * px, gap = px * 2, spaceW = px * 4;
+		int total = 0;
+		for (char c : text.toCharArray()) total += (c == ' ' ? spaceW : letterW + gap);
+		total -= gap;
+		int x = centerX - total / 2;
+		int glow = NyxTheme.accent(70);
+		for (char c : text.toCharArray()) {
+			if (c == ' ') { x += spaceW; continue; }
+			String[] rows = FONT.get(c);
+			if (rows != null) {
+				for (int ry = 0; ry < rows.length; ry++) {
+					for (int rx = 0; rx < 5; rx++) {
+						if (rows[ry].charAt(rx) != '1') continue;
+						int bx = x + rx * px, by = top + ry * px;
+						ctx.fill(bx + 2, by + 2, bx + px + 2, by + px + 2, glow);
+						ctx.fill(bx, by, bx + px, by + px, NyxTheme.accent());
+					}
+				}
+			}
+			x += letterW + gap;
+		}
 	}
 
 	private void drawMoon(DrawContext ctx) {
