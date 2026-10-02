@@ -21,7 +21,7 @@ import java.util.List;
  * Drawn and hit-tested by hand (no vanilla widgets) so it behaves the same
  * across Minecraft versions; each tab is short enough to need no scrolling.
  */
-public class NyxSettingsScreen extends Screen {
+public class NyxSettingsScreen extends NyxScreenBase {
 	/** Set while the player has deliberately opened the vanilla menu from ours. */
 	public static boolean allowVanilla = false;
 
@@ -93,7 +93,8 @@ public class NyxSettingsScreen extends Screen {
 		tabs.add(general);
 
 		Tab quality = new Tab("Quality");
-		quality.options.add(cycle("Graphics", "Fast is lightest, Fancy is vanilla, Fabulous adds extra transparency effects.", o.getGraphicsMode()));
+		SimpleOption<?> gfx = NyxGfx.graphics(o);
+		if (gfx != null) quality.options.add(cycleRaw("Graphics", "Fast is lightest, Fancy is vanilla, Fabulous adds extra transparency effects.", gfx));
 		quality.options.add(cycle("Clouds", "Cloud rendering quality, or off entirely.", o.getCloudRenderMode()));
 		quality.options.add(cycle("Particles", "How many particles are shown.", o.getParticles()));
 		quality.options.add(toggle("Smooth Lighting", "Smoother shading on blocks. Turning it off is a little faster.", o.getAo()));
@@ -144,6 +145,11 @@ public class NyxSettingsScreen extends Screen {
 			public boolean isSlider() { return true; }
 			public float fraction() { return (opt.getValue() - min) / (float) (max - min); }
 		};
+	}
+
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	private Opt cycleRaw(String name, String desc, SimpleOption<?> opt) {
+		return cycle(name, desc, (SimpleOption) opt);
 	}
 
 	/** Cycles through whatever enum the option holds - no need to name the enum type. */
@@ -250,8 +256,7 @@ public class NyxSettingsScreen extends Screen {
 
 	// ---- input ----
 	@Override
-	public boolean mouseClicked(double mx, double my, int button) {
-		if (super.mouseClicked(mx, my, button)) return true;
+	protected boolean handleClick(double mx, double my, int button) {
 		if (button != 0) return false;
 
 		for (int i = 0; i < tabs.size(); i++) {
@@ -284,18 +289,17 @@ public class NyxSettingsScreen extends Screen {
 	}
 
 	@Override
-	public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
+	protected boolean handleDrag(double mx, double my) {
 		if (dragging != null) {
 			dragging.click(sliderFraction(mx), true);
 			return true;
 		}
-		return super.mouseDragged(mx, my, button, dx, dy);
+		return false;
 	}
 
 	@Override
-	public boolean mouseReleased(double mx, double my, int button) {
+	protected void handleRelease() {
 		dragging = null;
-		return super.mouseReleased(mx, my, button);
 	}
 
 	@Override

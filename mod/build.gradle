@@ -44,6 +44,24 @@ def javaLevel = project.minecraft_version.startsWith('1.20') ? 17 : 21
 // "~1.20.4" style range so the jar only claims the exact version it was built for.
 def mcRange = "~${project.minecraft_version}"
 
+// Minecraft changed some GUI APIs mid-1.21 (mouse events became Click objects
+// in 1.21.9; the Graphics option went away in 1.21.11). Each variant of the
+// affected classes lives in its own source folder and the right one is added
+// for the version being built.
+def mcParts = project.minecraft_version.split('\\.')
+def mcMinor = mcParts.length > 1 ? mcParts[1].toInteger() : 0
+def mcPatch = mcParts.length > 2 ? mcParts[2].toInteger() : 0
+def clickApi = mcMinor > 21 || (mcMinor == 21 && mcPatch >= 9)
+def gfxNone = mcMinor > 21 || (mcMinor == 21 && mcPatch >= 11)
+sourceSets {
+	main {
+		java {
+			srcDir clickApi ? 'src/compat_mouse_click/java' : 'src/compat_mouse_legacy/java'
+			srcDir gfxNone ? 'src/compat_gfx_none/java' : 'src/compat_gfx_mode/java'
+		}
+	}
+}
+
 processResources {
 	inputs.property "version", project.version
 	inputs.property "mc_range", mcRange
