@@ -435,14 +435,14 @@ ipcMain.handle('auth:faceIcon', async (_e, uuid) => {
 
 ipcMain.handle('app:variant', () => VARIANT);
 ipcMain.handle('app:openSkinEditor', () => openSkinEditorWindow());
-ipcMain.handle('companionMod:status', (_e, instanceId) => {
+ipcMain.handle('companionMod:status', async (_e, instanceId) => {
   const inst = instances.get(instanceId);
   if (!inst) return { supported: false };
   return {
-    supported: companionMod.isSupported(inst.mcVersion, inst.loader),
+    supported: await companionMod.isSupported(inst.mcVersion, inst.loader),
     mcVersion: inst.mcVersion,
     loader: inst.loader,
-    supportedVersions: companionMod.SUPPORTED_VERSIONS,
+    supportedVersions: await companionMod.supportedVersions(),
   };
 });
 

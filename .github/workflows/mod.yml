@@ -17,85 +17,74 @@ permissions:
   contents: write
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: plan
+        run: |
+          # Asks Fabric's own services which mappings / loader / Fabric API
+          # exist for each Minecraft version, so none of it is hard-coded.
+          python3 mod/plan.py $MOJANG_FLAG | tee matrix.json
+          echo "matrix=$(cat matrix.json)" >> "$GITHUB_OUTPUT"
+        env:
+          MOJANG_FLAG: ${{ hashFiles('mod26/build.gradle') != '' && '--mojang' || '' }}
+
   build:
+    needs: plan
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          # Versions I could verify are real as of my own knowledge. Extending
-          # this upward to whatever's newest needs the exact Yarn mappings
-          # build number and a matching Fabric API version, which I can't
-          # currently verify without web access - see the project notes for
-          # how to add a row here.
-          - minecraft_version: '1.20.1'
-            yarn_mappings: '1.20.1+build.10'
-            loader_version: '0.16.5'
-            fabric_version: '0.92.0+1.20.1'
-          - minecraft_version: '1.20.4'
-            yarn_mappings: '1.20.4+build.3'
-            loader_version: '0.16.5'
-            fabric_version: '0.97.2+1.20.4'
-          - minecraft_version: '1.21'
-            yarn_mappings: '1.21+build.9'
-            loader_version: '0.16.5'
-            fabric_version: '0.100.1+1.21'
-          - minecraft_version: '1.21.1'
-            yarn_mappings: '1.21.1+build.3'
-            loader_version: '0.16.5'
-            fabric_version: '0.102.0+1.21.1'
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: ${{ matrix.java }}
 
-      - name: Set up Gradle
+      - name: Set up Gradle ${{ matrix.gradle }}
         uses: gradle/actions/setup-gradle@v4
         with:
-          # fabric-loom 1.7.x uses a Gradle Problems-reporting API that only
-          # exists in newer Gradle releases. Without a project-local Gradle
-          # wrapper, the runner's default pre-installed Gradle was too old
-          # for it (NoSuchMethodError: Problems.forNamespace) - pinning an
-          # explicit version here is the fix.
-          gradle-version: '8.10'
+          gradle-version: ${{ matrix.gradle }}
 
-      - name: Build mod for MC ${{ matrix.minecraft_version }}
-        working-directory: mod
+      - name: Build mod for MC ${{ matrix.mc }}
+        working-directory: ${{ matrix.dir }}
         shell: bash
         run: |
           set +e
           gradle build --no-daemon --stacktrace \
-            -Pminecraft_version=${{ matrix.minecraft_version }} \
-            -Pyarn_mappings=${{ matrix.yarn_mappings }} \
-            -Ploader_version=${{ matrix.loader_version }} \
-            -Pfabric_version=${{ matrix.fabric_version }} 2>&1 | tee build.log
+            -Pminecraft_version=${{ matrix.mc }} \
+            -Pyarn_mappings=${{ matrix.yarn }} \
+            -Ploader_version=${{ matrix.loader }} \
+            -Pfabric_version=${{ matrix.api }} \
+            -Ploom_version=${{ matrix.loom }} 2>&1 | tee build.log
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             # The raw Actions log isn't readable without signing in, so surface
             # the compiler's own error lines as annotations anyone can see.
-            msg=$(grep -E "error:|\.java:[0-9]+|What went wrong|Could not|not found|cannot find" -A2 build.log | head -40 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
-            echo "::error title=Mod build failed::${msg:0:3500}"
+            msg=$(grep -E "error:|\.java:[0-9]+|What went wrong|Could not|not found|cannot find|Unsupported|requires" -A2 build.log | head -40 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=Mod build failed (MC ${{ matrix.mc }})::${msg:0:3500}"
           fi
           exit $status
 
       - name: Upload jar as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nyx-companion-${{ matrix.minecraft_version }}
-          path: mod/build/libs/*.jar
+          name: nyx-companion-${{ matrix.mc }}
+          path: ${{ matrix.dir }}/build/libs/nyx-companion-${{ matrix.mc }}.jar
 
   # A single rolling release, separate from the app's own versioned
-  # releases - mod jars and app versions change on different schedules, so
-  # tying them together would mean the launcher needing to know which app
-  # tag has the mod jars attached, which changes every release. This gives
-  # one fixed, predictable download URL per Minecraft version instead:
-  # github.com/<repo>/releases/download/mod-latest/nyx-companion-<mc>.jar
+  # releases: one fixed download URL per Minecraft version, plus a
+  # versions.json listing which versions actually built, so the launcher
+  # knows what is supported without needing an update itself.
   publish:
     needs: build
+    if: ${{ always() && needs.build.result != 'skipped' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -107,24 +96,24 @@ jobs:
           path: jars
           merge-multiple: true
 
-      - name: Flatten jar names (strip the -sources/-dev suffixes Loom adds)
+      - name: Collect jars and write versions.json
         run: |
           mkdir -p out
-          for f in jars/*.jar; do
-            base=$(basename "$f")
-            case "$base" in
-              *-sources.jar|*-dev.jar) continue ;;
-            esac
-            cp "$f" "out/$base"
-          done
+          cp jars/nyx-companion-*.jar out/
           ls -la out
+          python3 - <<'PY'
+          import glob, json, os, re
+          vs = sorted(re.match(r"nyx-companion-(.+)\.jar", os.path.basename(f)).group(1) for f in glob.glob("out/*.jar"))
+          json.dump({"versions": vs}, open("out/versions.json", "w"))
+          print(vs)
+          PY
 
       - name: Publish to the mod-latest release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release delete mod-latest --yes --cleanup-tag || true
-          gh release create mod-latest out/*.jar \
+          gh release create mod-latest out/* \
             --title "Nyx Companion mod (latest)" \
-            --notes "Auto-published by CI from the mod/ source on every push to main. Not a versioned release - always the newest successful build per Minecraft version." \
+            --notes "Auto-published by CI from the mod sources on every push to main. Not a versioned release - always the newest successful build per Minecraft version." \
             --prerelease
