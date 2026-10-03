@@ -348,8 +348,13 @@ ipcMain.handle('versions:forgePromoted', (_e, mcVersion) => versions.getForgePro
 // ---------------------------------------------------------------------------
 ipcMain.handle('instances:list', () => instances.all());
 ipcMain.handle('instances:create', async (_e, data) => {
+  if (!data || !data.mcVersion) throw new Error('Pick a Minecraft version first.');
   const inst = instances.create(data);
-  await installDefaultUtilityMods(instances.rootDir(inst.id), inst.loader, inst.mcVersion);
+  // Fabric API / Mod Menu download in the background - waiting on two network
+  // downloads made the Create button look dead for several seconds, and a
+  // network hiccup shouldn't stop the instance from existing.
+  installDefaultUtilityMods(instances.rootDir(inst.id), inst.loader, inst.mcVersion)
+    .catch((err) => console.error('Default mods failed for new instance:', err));
   return inst;
 });
 ipcMain.handle('instances:update', (_e, { id, patch }) => instances.update(id, patch));

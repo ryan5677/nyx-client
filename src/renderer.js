@@ -234,10 +234,14 @@ $('#play-loader-version-select').addEventListener('change', async () => {
 const modal = $('#modal-backdrop');
 $('#btn-new-instance').addEventListener('click', async () => {
   modal.hidden = false;
-  const versions = await anvil.versions.vanilla({ includeSnapshots: state.settings?.showSnapshots });
   const versionSel = $('#new-version');
-  versionSel.innerHTML = versions.map((v) => `<option value="${v.id}">${v.id}</option>`).join('');
-  await populateLoaderVersions($('#new-loader-version'), $('#new-loader').value, versionSel.value, 'latest');
+  try {
+    const versions = await anvil.versions.vanilla({ includeSnapshots: state.settings?.showSnapshots });
+    versionSel.innerHTML = versions.map((v) => `<option value="${v.id}">${v.id}</option>`).join('');
+    await populateLoaderVersions($('#new-loader-version'), $('#new-loader').value, versionSel.value, 'latest');
+  } catch (err) {
+    toast(`Couldn\u2019t load the Minecraft version list: ${err.message || err}`, true);
+  }
 });
 $('#btn-cancel-new').addEventListener('click', () => { modal.hidden = true; });
 $('#new-version').addEventListener('change', () =>
@@ -246,16 +250,25 @@ $('#new-loader').addEventListener('change', () =>
   populateLoaderVersions($('#new-loader-version'), $('#new-loader').value, $('#new-version').value, 'latest'));
 
 $('#btn-create-new').addEventListener('click', async () => {
-  const name = $('#new-name').value.trim() || $('#new-version').value;
+  const btn = $('#btn-create-new');
   const mcVersion = $('#new-version').value;
+  if (!mcVersion) { toast('Pick a Minecraft version first (the list may still be loading).', true); return; }
+  const name = $('#new-name').value.trim() || mcVersion;
   const loader = $('#new-loader').value;
   const loaderVersion = $('#new-loader-version').value || 'latest';
-  const inst = await anvil.instances.create({ name, mcVersion, loader, loaderVersion });
-  modal.hidden = true;
-  $('#new-name').value = '';
-  state.selectedId = inst.id;
-  await loadInstances();
-  toast(`Created "${inst.name}"`);
+  btn.disabled = true;
+  try {
+    const inst = await anvil.instances.create({ name, mcVersion, loader, loaderVersion });
+    modal.hidden = true;
+    $('#new-name').value = '';
+    state.selectedId = inst.id;
+    await loadInstances();
+    toast(`Created "${inst.name}"`);
+  } catch (err) {
+    toast(`Couldn\u2019t create the instance: ${err.message || err}`, true);
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 // -------------------------------------------------------------------- Play
