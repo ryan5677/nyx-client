@@ -90,7 +90,7 @@ function variantFileContents(v) {
   try {
     await build({
       targets: Platform.WINDOWS.createTarget(),
-      config: { productName, appId, nsis: { artifactName }, publish: { provider: 'github', channel: publishChannel } },
+      config: { productName, appId, nsis: { artifactName, shortcutName: productName, uninstallDisplayName: productName }, publish: { provider: 'github', channel: publishChannel } },
       // Locally (and in this sandbox) this only produces the installer + the
       // update-feed yml file - no GitHub token available or wanted here.
       // The GitHub Actions workflow (.github/workflows/release.yml) sets

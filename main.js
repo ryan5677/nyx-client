@@ -22,6 +22,31 @@ const ingame = require('./lib/ingame');
 const sync = require('./lib/sync');
 const companionMod = require('./lib/companionmod');
 const { VARIANT } = require('./lib/variant');
+
+// The Dev build keeps its own data folder (settings, accounts, instances) and
+// its own name, so installing Dev next to Public no longer shares - or
+// overwrites - anything. Must run before the app reads userData for the first time.
+if (VARIANT === 'dev') {
+  const appData = app.getPath('appData');
+  const publicDir = path.join(appData, 'nyx-client');
+  const devDir = path.join(appData, 'nyx-client-dev');
+  const firstRun = !fs.existsSync(devDir);
+  app.setName('Nyx Client Dev');
+  app.setPath('userData', devDir);
+  if (firstRun) {
+    // One-time carry-over of the small settings files from when both builds
+    // shared one folder (game files are re-downloaded on first launch).
+    try {
+      fs.mkdirSync(devDir, { recursive: true });
+      for (const f of ['settings.json', 'account.json', 'instances.json', 'friends.json']) {
+        const src = path.join(publicDir, f);
+        if (fs.existsSync(src)) fs.copyFileSync(src, path.join(devDir, f));
+      }
+    } catch (err) {
+      console.error('Could not carry settings over to the Dev data folder:', err);
+    }
+  }
+}
 const { DEFAULT_BACKEND_URL } = require('./lib/config');
 
 let mainWindow = null;
