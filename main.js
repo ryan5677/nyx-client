@@ -910,6 +910,16 @@ ipcMain.handle('launch:start', async (_e, instanceId, joinServer = null) => {
   emitter.on('extract', (extract) => send('launch:extract', extract));
   emitter.on('estimated', (time) => send('launch:estimated', time));
   emitter.on('patch', (patch) => send('launch:patch', patch));
+  // Say plainly in the launch console whether the Nyx menus mod went in, so
+  // "the menu didn't change" can be answered at a glance.
+  const reasons = {
+    unsupported: `not installed - Nyx menus need a Fabric instance on a supported Minecraft version (this one is ${inst.loader} ${inst.mcVersion})`,
+    'nothing-enabled': 'not installed - both menu options are turned off in the In-Game tab',
+    error: `install failed - ${companionResult.error || 'unknown error'}`,
+  };
+  send('launch:log', companionResult.installed
+    ? `[Nyx] Companion mod installed for Minecraft ${inst.mcVersion} - Nyx menus should appear in-game.\n`
+    : `[Nyx] Companion mod ${reasons[companionResult.reason] || 'not installed'}.\n`);
   emitter.on('data', (line) => send('launch:log', String(line)));
   emitter.on('close', (code) => send('launch:closed', code));
   // minecraft-java-core emits 'error' with all sorts of shapes (a plain
